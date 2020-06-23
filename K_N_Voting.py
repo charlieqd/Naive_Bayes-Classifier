@@ -8,8 +8,8 @@ from sklearn.metrics import accuracy_score
 
 
 class KnClassifier(BasicClassifier):
-    def __init__(self, train_data, train_target, vocab_feature, class_c, test_data, name, k):
-        super().__init__(train_data, train_target, vocab_feature, class_c, test_data, name)
+    def __init__(self, train_data, train_target, vocab_feature, class_c, test_data, test_target, name, k):
+        super().__init__(train_data, train_target, vocab_feature, class_c, test_data, test_target, name)
         self.bottom_up_table = []
         self.k_max = k
         self.data_k_pred_prob_matrix = []
@@ -17,15 +17,16 @@ class KnClassifier(BasicClassifier):
     def kn_fit(self):
         self.fit()
 
-    def log_prob_voting_kn(self, test_data, class_selected, class_not_selected):
+    def log_prob_voting_kn_multi(self, test_data, class_selected, class_not_selected):
+        alpha = 1
         tokenizer = nltk.RegexpTokenizer(r"\w+")
         prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
         feature_prob = []
         for word in tokenizer.tokenize(test_data):
             word = word.lower()
             if word in self.result[class_selected].keys():
-                word_occurrence_in_class = self.result[class_selected][word] + 1  # Tct + 1
-                word_occurrence = self.result[class_selected][word] + 1 + self.result[class_not_selected][word] + 1
+                word_occurrence_in_class = self.result[class_selected][word] + alpha  # Tct + 1
+                word_occurrence = self.result[class_selected][word] + self.result[class_not_selected][word] + alpha*2
                 output = np.log(word_occurrence_in_class) - np.log(word_occurrence)
                 feature_prob.append(output)
             else:
@@ -34,27 +35,47 @@ class KnClassifier(BasicClassifier):
             feature_prob.append(prior)
 
         return feature_prob
+    #
+    # def log_prob_voting_kn_tfidf(self, test_data, class_selected, class_not_selected):
+    #     tokenizer = nltk.RegexpTokenizer(r"\w+")
+    #     prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
+    #     feature_prob = []
+    #     word_list = []
+    #     for word in tokenizer.tokenize(test_data):
+    #         word = word.lower()
+    #         if word not in word_list:
+    #             word_list.append(word)
+    #         else:
+    #             continue
+    #         if word in self.result[class_selected].keys():
+    #             word_occurrence_in_class = self.tfidf_result[class_selected][word] + 1  # Tct + 1
+    #             word_occurrence = self.tfidf_result[class_selected][word] + 1 + self.tfidf_result[class_not_selected][word] + 1
+    #             output = np.log(word_occurrence_in_class) - np.log(word_occurrence)
+    #             feature_prob.append(output)
+    #         else:
+    #             continue  # we don't care about the words not in the feature list
+    #     if not feature_prob:
+    #         feature_prob.append(prior)
+    #
+    #     return feature_prob
 
-    def log_prob_voting_kn_tfidf(self, test_data, class_selected, class_not_selected):
-        tokenizer = nltk.RegexpTokenizer(r"\w+")
-        prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
+    def log_prob_voting_kn_bernoulli(self, index, class_selected, class_not_selected):
+        alpha = 1
         feature_prob = []
-        word_list = []
-        for word in tokenizer.tokenize(test_data):
-            word = word.lower()
-            if word not in word_list:
-                word_list.append(word)
+        for word in self.vocab_feature:
+            total_doc = self.result[class_selected]["DOC_OF_CLASS"] + self.result[class_not_selected]["DOC_OF_CLASS"]
+            doc_with_word = self.df_dict_train[class_selected][word] + self.df_dict_train[class_not_selected][word] + alpha * 2
+            doc_without_word = total_doc - doc_with_word
+            doc_with_word_in_class = self.df_dict_train[class_selected][word] + alpha
+            doc_without_word_in_class = self.result[class_selected]["DOC_OF_CLASS"] - doc_with_word_in_class
+            if word in self.tf_dict[index].keys():
+                # cond_prob = doc_with_word_in_class/doc_with_word
+                cond_prob = np.log(doc_with_word_in_class) - np.log(doc_with_word)
+                feature_prob.append(cond_prob)
             else:
-                continue
-            if word in self.result[class_selected].keys():
-                word_occurrence_in_class = self.tfidf_result[class_selected][word] + 1  # Tct + 1
-                word_occurrence = self.tfidf_result[class_selected][word] + 1 + self.tfidf_result[class_not_selected][word] + 1
-                output = np.log(word_occurrence_in_class) - np.log(word_occurrence)
-                feature_prob.append(output)
-            else:
-                continue  # we don't care about the words not in the feature list
-        if not feature_prob:
-            feature_prob.append(prior)
+                # cond_prob = doc_without_word_in_class/doc_without_word
+                cond_prob = np.log(doc_without_word_in_class) - np.log(doc_without_word)
+                feature_prob.append(cond_prob)
 
         return feature_prob
 
@@ -86,15 +107,21 @@ class KnClassifier(BasicClassifier):
         target_pred = np.zeros((self.k_max, len(test_data)))
         counter = 0
 
-        for data in test_data:
-            if v_type == "regular":
-                p_c_list = self.log_prob_voting_kn(data, "CLASS_C", "NOT_CLASS_C")
-                p_not_c_list = self.log_prob_voting_kn(data, "NOT_CLASS_C", "CLASS_C")
-            elif v_type == "tfidf":
-                p_c_list = self.log_prob_voting_kn_tfidf(data, "CLASS_C", "NOT_CLASS_C")
-                p_not_c_list = self.log_prob_voting_kn_tfidf(data, "NOT_CLASS_C", "CLASS_C")
+        for i in range(len(test_data)):
+            p_c_list, p_not_c_list = [], []
+            data = test_data[i]
+            if v_type == "multi":
+                p_c_list = self.log_prob_voting_kn_multi(data, "CLASS_C", "NOT_CLASS_C")
+                p_not_c_list = self.log_prob_voting_kn_multi(data, "NOT_CLASS_C", "CLASS_C")
+            # elif v_type == "tfidf":
+            #     p_c_list = self.log_prob_voting_kn_tfidf(data, "CLASS_C", "NOT_CLASS_C")
+            #     p_not_c_list = self.log_prob_voting_kn_tfidf(data, "NOT_CLASS_C", "CLASS_C")
 
             # build the bottom up
+            elif v_type == "bernoulli":
+                p_c_list = self.log_prob_voting_kn_bernoulli(i, "CLASS_C", "NOT_CLASS_C")
+                p_not_c_list = self.log_prob_voting_kn_bernoulli(i, "NOT_CLASS_C", "CLASS_C")
+
             n = len(p_c_list)
             p_c_list.insert(0, -1)
             p_not_c_list.insert(0, -1)

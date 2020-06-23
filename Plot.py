@@ -19,12 +19,12 @@ def plot(e_type, range_list, classifier, k, info):
         elif e_type == "0-1":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "0-1")
             recall_c, precision_c = classifier.estimation(pred)
-        elif e_type == "kn":
-            pred = classifier.predict_kn(classifier.test_data, threshold, k)
-            recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "bernoulli":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "bernoulli")
             recall_c, precision_c,c,d = classifier.estimation(pred)
+        elif e_type == "kn":
+            pred = classifier.predict_kn(classifier.test_data, threshold, k)
+            recall_c, precision_c, c, d = classifier.estimation(pred)
 
         recall_list.append(recall_c)
         precision_list.append(precision_c)

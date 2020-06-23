@@ -80,7 +80,7 @@ class BasicClassifier:
                         continue
                     self.result["NOT_CLASS_C"][word] += self.doc_to_vocab[i][word]
                     # self.df[word] += 1
-        self.tf_dict = self.build_tf_dict()
+        self.tf_dict = self.build_tf_dict_test()
         self.df_dict = self.build_df_dict()
         self.tfidf_dict = self.build_tfidf_dict()
 
@@ -115,7 +115,7 @@ class BasicClassifier:
                         df_dict["NOT_CLASS_C"][word] += 1
         self.df_dict_train = df_dict
 
-    def build_tf_dict(self):
+    def build_tf_dict_test(self):
         # only contain the word in vocabulary feature list
         tf_dict = {}
         tokenizer = nltk.RegexpTokenizer(r"\w+")
@@ -189,8 +189,8 @@ class BasicClassifier:
 
         if t_type == "bernoulli":
             for feature_word in self.vocab_feature:
-                cond_prob = (self.df_dict_train[class_selected][feature_word] + 1) / (
-                            self.result[class_selected]["DOC_OF_CLASS"] + 2)
+                cond_prob = (self.df_dict_train[class_selected][feature_word] + alpha) / (
+                            self.result[class_selected]["DOC_OF_CLASS"] + alpha*2)
                 # print(self.df_dict_train[class_selected][feature_word], self.result[class_selected]["DOC_OF_CLASS"])
                 # print(feature_word, " cond is ", cond_prob)
                 cond_prob_log = np.log(self.df_dict_train[class_selected][feature_word] + alpha) - np.log(

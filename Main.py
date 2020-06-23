@@ -59,27 +59,37 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type):
         Plot.plot(t_type, t_list, basic_classifier, 0, ' Multinomial NB with ' + t_type)
 
 
-def run_kn_classifier(data_name, class_c, threshold, plot, t_list, type, k_max, k):
+def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k):
     data = pickle.load(open(data_name, "rb"))
     print("test is ", len(data.vocab_feature))
+    vocab_list = data.vocab_feature[0:5]  # data.vocab_feature
+    print(vocab_list)
+    # kn_classifier = K_N_Voting.KnClassifier(data.train_data.data, data.train_data.target,
+    #                                         data.vocab_feature, class_c, data.test_data.data,
+    #                                         data.test_data.target, "kn", k_max)
     kn_classifier = K_N_Voting.KnClassifier(data.train_data.data, data.train_data.target,
-                                            data.vocab_feature, class_c, data.test_data, "kn", k_max)
+                                            vocab_list, class_c, data.test_data.data,
+                                            data.test_data.target, "kn", k_max)
     kn_classifier.kn_fit()
-    if type == "tf":
-        kn_classifier.kn_voting(kn_classifier.test_data, "regular")
-    elif type == "tfidf":
-        kn_classifier.kn_voting(kn_classifier.test_data, "tfidf")
+    if c_type == "multi":
+        kn_classifier.kn_voting(kn_classifier.test_data, "multi")
+    elif c_type == "bernoulli":
+        kn_classifier.build_df_dict_train()
+        kn_classifier.kn_voting(kn_classifier.test_data, "bernoulli")
+    # elif type == "tfidf":
+    #     kn_classifier.build_df_dict_train()
+    #     kn_classifier.kn_voting(kn_classifier.test_data, "tfidf")
     prediction = kn_classifier.predict_kn(kn_classifier.test_data, threshold, k)
     print("Truth is ")
     print(kn_classifier.true_pred)
     print("Predict result is ")
     print(prediction)
     print("acc is ", accuracy_score(kn_classifier.true_pred, prediction))
-    recall, precision = kn_classifier.estimation(prediction)
+    recall, precision, c, d = kn_classifier.estimation(prediction)
     print("precision and recall is ", precision, recall)
     if plot == "plot_one":
         print(t_list)
-        Plot.plot("kn", t_list, kn_classifier, k, 'K-N Voting Classifier with ' + type)
+        Plot.plot("kn", t_list, kn_classifier, k, 'K-N Voting Classifier with ' + c_type)
     elif plot == "plot_all":
         kn_classifier.plot_kn(t_list)
 
@@ -92,11 +102,11 @@ if __name__ == '__main__':
     # file_name = "data_" + str(num_feature) + " " + class_c + ".pickle"
     # load_data(class_c, num_feature, file_name)
     threshold = 0.5
-    run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf")
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf")
     # # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf")
-    # k_max = 5
-    # k = 1
-    # run_kn_classifier(file_name, class_c, threshold, "no_plot", np.arange(0.01, 1, 0.01), "tf", k_max, k)
+    k_max = 10
+    k = 1
+    run_kn_classifier(file_name, class_c, threshold, "plot_all", np.arange(0.01, 1, 0.01), "bernoulli", k_max, k)
 
 
 
