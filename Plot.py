@@ -11,14 +11,20 @@ def plot(e_type, range_list, classifier, k, info):
     recall_list, precision_list, threshold_list, recall_c, precision_c = [], [], [], -1, -1
     for threshold in range_list:
         if e_type == "tf":
-            pred = classifier.predict_with_threshold(classifier.test_data, threshold)
-            recall_c, precision_c = classifier.estimation(pred)
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tf")
+            recall_c, precision_c ,c,d= classifier.estimation(pred)
         elif e_type == "tfidf":
-            pred = classifier.predict_with_threshold_tfidf(classifier.test_data, threshold)
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tfidf")
+            recall_c, precision_c = classifier.estimation(pred)
+        elif e_type == "0-1":
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "0-1")
             recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "kn":
             pred = classifier.predict_kn(classifier.test_data, threshold, k)
             recall_c, precision_c = classifier.estimation(pred)
+        elif e_type == "bernoulli":
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "bernoulli")
+            recall_c, precision_c,c,d = classifier.estimation(pred)
 
         recall_list.append(recall_c)
         precision_list.append(precision_c)

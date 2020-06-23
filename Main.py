@@ -1,3 +1,5 @@
+import sklearn
+
 import Plot
 import pickle
 import numpy as np
@@ -5,41 +7,56 @@ import NewsgroupData
 import BasicClassifier
 import K_N_Voting
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_fscore_support
+from sklearn.feature_extraction.text import TfidfVectorizer
 from numpy import zeros
 
 
 def load_data(class_c, num_of_feature, filename):
     news_data = NewsgroupData.Newsgroups_data(class_c)
+    print("1")
     news_data.data_process()
+    print("2")
     news_data.build_mi_dict()
+    print("3")
     news_data.build_vocab_feature_list(num_of_feature)
+    print("4")
     pickle.dump(news_data, file=open(filename, "wb"))
 
 
-def run_base_classifier(data_name, class_c, threshold, plot, t_list, type):
+def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type):
     data = pickle.load(open(data_name, "rb"))
     print("test is ", len(data.vocab_feature))
+    vocab_list = data.vocab_feature[0:50]  # data.vocab_feature
+    print(vocab_list)
     basic_classifier = BasicClassifier.BasicClassifier(data.train_data.data, data.train_data.target,
-                                                       data.vocab_feature, class_c, data.test_data, "basic")
+                                                       vocab_list, class_c, data.test_data.data, data.test_data.target,
+                                                       "basic")
     basic_classifier.fit()
 
-    if type == "tf":
-        predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold)
-    elif type == "tfidf":
-        predict_result = basic_classifier.predict_with_threshold_tfidf(basic_classifier.test_data, threshold)
+    if t_type == "tf":
+        predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "tf")
+    elif t_type == "tfidf":
+        predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "tfidf")
+    elif t_type == "0-1":
+        predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "0-1")
+    elif t_type == "bernoulli":
+        basic_classifier.build_df_dict_train()
+        predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "bernoulli")
 
-    # predict_result = basic_classifier.pred_result
+    predict_result = basic_classifier.pred_result
     print("Truth is ")
     print(basic_classifier.true_pred)
     print("Predict result is ")
     print(predict_result)
     print("acc is ", basic_classifier.accuracy())
-    recall, precision = basic_classifier.estimation(basic_classifier.pred_result)
+    recall, precision, c, d = basic_classifier.estimation(basic_classifier.pred_result)
     print("recall and precisioon is ", recall, precision)
+    print(d, c)
 
     if plot == 1:
         print(t_list)
-        Plot.plot(type, t_list, basic_classifier, 0, ' Multinomial NB with ' + type)
+        Plot.plot(t_type, t_list, basic_classifier, 0, ' Multinomial NB with ' + t_type)
 
 
 def run_kn_classifier(data_name, class_c, threshold, plot, t_list, type, k_max, k):
@@ -68,12 +85,20 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, type, k_max, 
 
 
 if __name__ == '__main__':
+    # class_c = 7
     class_c = 1
-    num_feature = 100
+    num_feature = 200
     file_name = "data_" + str(num_feature) + ".pickle"
+    # file_name = "data_" + str(num_feature) + " " + class_c + ".pickle"
     # load_data(class_c, num_feature, file_name)
     threshold = 0.5
-    run_base_classifier(file_name, class_c, threshold, 0, np.arange(0.01, 1, 0.01), "tf")
-    k_max = 5
-    k = 1
-    run_kn_classifier(file_name, class_c, threshold, "no_plot", np.arange(0.01, 1, 0.01), "tf", k_max, k)
+    run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf")
+    # # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf")
+    # k_max = 5
+    # k = 1
+    # run_kn_classifier(file_name, class_c, threshold, "no_plot", np.arange(0.01, 1, 0.01), "tf", k_max, k)
+
+
+
+
+
