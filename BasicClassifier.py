@@ -165,9 +165,9 @@ class BasicClassifier:
 
         return tfidf_dict
 
-    def log_prob(self, class_selected, index, t_type):
+    def log_prob(self, class_selected, index, t_type, alpha=1):
         count = 0
-        alpha = 1
+        # alpha = 1
         output = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(
              self.result["TOTAL_DOC"])  # log(pc) = log(Nc) - log(N)
         # output_1 = self.result[class_selected]["DOC_OF_CLASS"]/self.result["TOTAL_DOC"]
@@ -217,14 +217,14 @@ class BasicClassifier:
 
         return output, count
 
-    def predict(self, test_data):
+    def predict(self, test_data, alpha=1):
         target_pred = []
         pred_prob = []  # list of probability that belongs to class_c
         for i in range(len(test_data)):
             data = test_data[i]
             best_pred = 1
-            p_c, c0 = self.log_prob("CLASS_C", i)
-            p_not_c, c1 = self.log_prob("NOT_CLASS_C", i)
+            p_c, c0 = self.log_prob("CLASS_C", i, alpha)
+            p_not_c, c1 = self.log_prob("NOT_CLASS_C", i, alpha)
             if p_not_c > p_c:
                 best_pred = 0
 
@@ -233,13 +233,13 @@ class BasicClassifier:
 
         return target_pred, pred_prob
 
-    def predict_with_threshold(self, test_data, threshold, t_type):
+    def predict_with_threshold(self, test_data, threshold, t_type, alpha=1):
         target_pred = []
         pred_prob = []  # list of probability that belongs to class_c
         for i in range(len(test_data)):
             best_pred = 0
-            p_c, c0 = self.log_prob("CLASS_C", i, t_type)
-            p_not_c, c1 = self.log_prob("NOT_CLASS_C", i, t_type)
+            p_c, c0 = self.log_prob("CLASS_C", i, t_type, alpha)
+            p_not_c, c1 = self.log_prob("NOT_CLASS_C", i, t_type, alpha)
             # print(p_c)
             # print(p_not_c)
             t = 1 - threshold

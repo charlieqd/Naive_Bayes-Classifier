@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from pylab import figure, axes, pie, title, show
 
 
-def plot(e_type, range_list, classifier, k, info):
+def plot(e_type, range_list, classifier, k, info, p=1):
     recall_list, precision_list, threshold_list, recall_c, precision_c = [], [], [], -1, -1
     for threshold in range_list:
         if e_type == "tf":
@@ -33,16 +33,16 @@ def plot(e_type, range_list, classifier, k, info):
     print("recall list is ", recall_list)
     print("precision list is ", precision_list)
     print(threshold_list)
+    if p == 1:
+        plt.plot(recall_list, precision_list)
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title('Precision-Recall curve' + info)
+        plt.grid()
+        show()
 
-    plt.plot(recall_list, precision_list)
-    plt.xlabel('Recall')
-    plt.ylabel('Precision')
-    plt.title('Precision-Recall curve' + info)
-    plt.grid()
-    show()
-
-    plot_name = classifier.name + ".png"
-    # plt.savefig(plot_name)
+        plot_name = classifier.name + ".png"
+        # plt.savefig(plot_name)
 
 
 def plot_compare(range_list, classifier, classifier_2, info):

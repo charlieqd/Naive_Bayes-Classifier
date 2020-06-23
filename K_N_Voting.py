@@ -17,8 +17,8 @@ class KnClassifier(BasicClassifier):
     def kn_fit(self):
         self.fit()
 
-    def log_prob_voting_kn_multi(self, test_data, class_selected, class_not_selected):
-        alpha = 1
+    def log_prob_voting_kn_multi(self, test_data, class_selected, class_not_selected, alpha=1):
+        # alpha = 1
         tokenizer = nltk.RegexpTokenizer(r"\w+")
         prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
         feature_prob = []
@@ -59,8 +59,8 @@ class KnClassifier(BasicClassifier):
     #
     #     return feature_prob
 
-    def log_prob_voting_kn_bernoulli(self, index, class_selected, class_not_selected):
-        alpha = 1
+    def log_prob_voting_kn_bernoulli(self, index, class_selected, class_not_selected, alpha=1):
+        # alpha = 1
         feature_prob = []
         for word in self.vocab_feature:
             total_doc = self.result[class_selected]["DOC_OF_CLASS"] + self.result[class_not_selected]["DOC_OF_CLASS"]
@@ -102,7 +102,7 @@ class KnClassifier(BasicClassifier):
 
         self.bottom_up_table = bottom_up
 
-    def kn_voting(self, test_data, v_type):
+    def kn_voting(self, test_data, v_type, alpha=1):
 
         target_pred = np.zeros((self.k_max, len(test_data)))
         counter = 0
@@ -111,16 +111,16 @@ class KnClassifier(BasicClassifier):
             p_c_list, p_not_c_list = [], []
             data = test_data[i]
             if v_type == "multi":
-                p_c_list = self.log_prob_voting_kn_multi(data, "CLASS_C", "NOT_CLASS_C")
-                p_not_c_list = self.log_prob_voting_kn_multi(data, "NOT_CLASS_C", "CLASS_C")
+                p_c_list = self.log_prob_voting_kn_multi(data, "CLASS_C", "NOT_CLASS_C", alpha)
+                p_not_c_list = self.log_prob_voting_kn_multi(data, "NOT_CLASS_C", "CLASS_C", alpha)
             # elif v_type == "tfidf":
             #     p_c_list = self.log_prob_voting_kn_tfidf(data, "CLASS_C", "NOT_CLASS_C")
             #     p_not_c_list = self.log_prob_voting_kn_tfidf(data, "NOT_CLASS_C", "CLASS_C")
 
             # build the bottom up
             elif v_type == "bernoulli":
-                p_c_list = self.log_prob_voting_kn_bernoulli(i, "CLASS_C", "NOT_CLASS_C")
-                p_not_c_list = self.log_prob_voting_kn_bernoulli(i, "NOT_CLASS_C", "CLASS_C")
+                p_c_list = self.log_prob_voting_kn_bernoulli(i, "CLASS_C", "NOT_CLASS_C", alpha)
+                p_not_c_list = self.log_prob_voting_kn_bernoulli(i, "NOT_CLASS_C", "CLASS_C", alpha)
 
             n = len(p_c_list)
             p_c_list.insert(0, -1)
