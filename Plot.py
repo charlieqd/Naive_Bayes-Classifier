@@ -1,4 +1,3 @@
-import inline as inline
 import matplotlib
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import numpy as np
@@ -8,7 +7,7 @@ from pylab import figure, axes, pie, title, show
 import BasicClassifier
 
 
-def plot(e_type, range_list, classifier, k, info, p=1):
+def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_r=None):
     recall_list, precision_list, threshold_list, recall_c, precision_c = [], [], [], -1, -1
     for threshold in range_list:
         if e_type == "tf":
@@ -35,11 +34,13 @@ def plot(e_type, range_list, classifier, k, info, p=1):
     print("precision list is ", precision_list)
     print(threshold_list)
     if p == 1:
-        plt.plot(recall_list, precision_list)
+        plt.plot(recall_list, precision_list, label=k + 1)
+        plt.plot(recall_r, precision_r, label="Basic Bernoulli Model")
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Precision-Recall curve' + info)
         plt.grid()
+        plt.legend(loc="right")
         show()
 
         plot_name = classifier.name + ".png"
@@ -80,8 +81,8 @@ def plot_with_diff_features(data, range_list, e_type, feature_number_list):
         vocab_list_n = data.vocab_feature[0:n]
         print(vocab_list_n)
         classifier = BasicClassifier.BasicClassifier(data.train_data.data, data.train_data.target,
-                                                               vocab_list_n, class_c, data.test_data.data,
-                                                               data.test_data.target, "basic")
+                                                     vocab_list_n, class_c, data.test_data.data,
+                                                     data.test_data.target, "basic")
         classifier.fit()
         if e_type == "bernoulli":
             classifier.build_df_dict_train()

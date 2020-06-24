@@ -54,13 +54,14 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
     recall, precision, c, d = basic_classifier.estimation(basic_classifier.pred_result)
     print("recall and precisioon is ", recall, precision)
     print(d, c)
-
+    recall_list, precision_list = [], []
     if plot == 1:
         print(t_list)
-        Plot.plot(t_type, t_list, basic_classifier, 0, ' Multinomial NB with ' + t_type)
+        recall_list, precision_list = Plot.plot(t_type, t_list, basic_classifier, 0, ' Multinomial NB with ' + t_type, 0)
+    return recall_list, precision_list
 
 
-def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k, alpha):
+def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k, alpha, recall_ref, precision_ref):
     data = pickle.load(open(data_name, "rb"))
     print("test is ", len(data.vocab_feature))
     vocab_list = data.vocab_feature[0:5]  # data.vocab_feature
@@ -90,7 +91,7 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
     print("precision and recall is ", precision, recall)
     if plot == "plot_one":
         print(t_list)
-        Plot.plot("kn", t_list, kn_classifier, k, 'K-N Voting Classifier with ' + c_type)
+        Plot.plot("kn", t_list, kn_classifier, k, 'K-N Voting Classifier with ' + c_type, 1, recall_ref, precision_ref)
     elif plot == "plot_all":
         kn_classifier.plot_kn(t_list)
 
@@ -106,11 +107,13 @@ if __name__ == '__main__':
 
     threshold = 0.5
     alpha = 1
-    # run_base_classifier(file_name, class_c, threshold, 0, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
+    recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
+    print(recall_r)
+    print(precision_r)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf", alpha)
-    # k_max = 10
-    # k = 1
-    # run_kn_classifier(file_name, class_c, threshold, "plot_all", np.arange(0.01, 1, 0.01), "bernoulli", k_max, k, alpha)
-    feature_number_list = [5, 10, 20, 50, 100, 200]
-    Plot.plot_with_diff_features(data_1, np.arange(0.01, 1, 0.01), "bernoulli", feature_number_list)
+    k_max = 10
+    k = 1
+    run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1, 0.01), "bernoulli", k_max, k, alpha, recall_r, precision_r)
+    # feature_number_list = [5, 10, 20, 50, 100, 200]
+    # Plot.plot_with_diff_features(data_1, np.arange(0.01, 1, 0.01), "bernoulli", feature_number_list)
