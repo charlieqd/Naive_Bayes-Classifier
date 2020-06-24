@@ -61,7 +61,7 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
     return recall_list, precision_list
 
 
-def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k, alpha, recall_ref, precision_ref):
+def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k, alpha=1, recall_ref=None, precision_ref=None):
     data = pickle.load(open(data_name, "rb"))
     print("test is ", len(data.vocab_feature))
     vocab_list = data.vocab_feature[0:5]  # data.vocab_feature
@@ -101,19 +101,18 @@ if __name__ == '__main__':
     class_c = 1
     num_feature = 200
     file_name = "data_" + str(num_feature) + ".pickle"
-    data_1 = pickle.load(open(file_name, "rb"))
+    # data_1 = pickle.load(open(file_name, "rb"))
     # file_name = "data_" + str(num_feature) + " " + class_c + ".pickle"
     # load_data(class_c, num_feature, file_name)
-
     threshold = 0.5
-    alpha = 1
-    recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
-    print(recall_r)
-    print(precision_r)
+    # alpha = 1
+    # recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
+    # print(recall_r)
+    # print(precision_r)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf", alpha)
     k_max = 10
     k = 1
-    run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1, 0.01), "bernoulli", k_max, k, alpha, recall_r, precision_r)
+    run_kn_classifier(file_name, class_c, threshold, "no_plot", np.arange(0.01, 1, 0.01), "bernoulli", k_max, k)
     # feature_number_list = [5, 10, 20, 50, 100, 200]
     # Plot.plot_with_diff_features(data_1, np.arange(0.01, 1, 0.01), "bernoulli", feature_number_list)

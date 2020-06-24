@@ -1,6 +1,10 @@
 import nltk
-
+import pickle
+import numpy as np
+import NewsgroupData
 import BasicClassifier
+import K_N_Voting
+from sklearn.metrics import accuracy_score
 
 
 def build_df_dict(data_1, vocab):
@@ -24,20 +28,20 @@ def build_df_dict(data_1, vocab):
 # data = ["Hi this is john, who is u", "hi, nice to meet you"]
 # vocab = ["hi", "this", "is", "who", "nice", "meet", "sad"]
 # build_df_dict(data, vocab)
-
-class_c = 1
-train_data = ["China, Beijing,China", "China,China, Shanghai", "China, Macao", "Tokyo,Japan,China"]
-train_target = [1, 1, 1, 0]
-test_data = ["Tokyo, Japan, China,China,China"]
-test_target = [1]
-vocab_list = ["china", "beijing", "shanghai", "macao", "tokyo", "japan"]
-basic_classifier = BasicClassifier.BasicClassifier(train_data, train_target,
-                                                   vocab_list, class_c, test_data, test_target, "basic")
-basic_classifier.fit()
-basic_classifier.build_df_dict_train()
-predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, 0.5, "bernoulli")
-print("result is")
-print(predict_result)
+#
+# class_c = 1
+# train_data = ["China, Beijing,China", "China,China, Shanghai", "China, Macao", "Tokyo,Japan,China"]
+# train_target = [1, 1, 1, 0]
+# test_data = ["Tokyo, Japan, China,China,China"]
+# test_target = [1]
+# vocab_list = ["china", "beijing", "shanghai", "macao", "tokyo", "japan"]
+# basic_classifier = BasicClassifier.BasicClassifier(train_data, train_target,
+#                                                    vocab_list, class_c, test_data, test_target, "basic")
+# basic_classifier.fit()
+# basic_classifier.build_df_dict_train()
+# predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, 0.5, "bernoulli")
+# print("result is")
+# print(predict_result)
 
 # data = pickle.load(open(file_name, "rb"))
     # vectorizer = TfidfVectorizer()
@@ -79,3 +83,33 @@ print(predict_result)
     # print(vectorizer.get_feature_names())
     # print(X.shape)
     # print(X)
+
+class_c = 1
+num_feature = 200
+k_max = 5
+k = 3
+threshold = 0.5
+file_name = "data_" + str(num_feature) + ".pickle"
+data = pickle.load(open(file_name, "rb"))
+print("test is ", len(data.vocab_feature))
+vocab_list = data.vocab_feature[0:50]  # data.vocab_feature
+print(vocab_list)
+test_data = data.test_data.data
+test_target = data.test_data.target
+kn_classifier = K_N_Voting.KnClassifier(data.train_data.data, data.train_data.target,
+                                        vocab_list, class_c, test_data,
+                                        test_target, "kn", k_max)
+kn_classifier.kn_fit()
+kn_classifier.build_df_dict_train()
+kn_classifier.kn_voting(kn_classifier.test_data, "bernoulli")
+prediction = kn_classifier.predict_kn(kn_classifier.test_data, threshold, k)
+print("Truth is ")
+print(kn_classifier.true_pred)
+print("Predict result is ")
+print(prediction)
+unique, counts = np.unique(prediction, return_counts=True)
+print(unique)
+print(counts)
+print("acc is ", accuracy_score(kn_classifier.true_pred, prediction))
+recall, precision, c, d = kn_classifier.estimation(prediction)
+print("precision and recall is ", precision, recall)
