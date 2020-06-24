@@ -5,6 +5,7 @@ import numpy as np
 # %matplotlib inline
 import matplotlib.pyplot as plt
 from pylab import figure, axes, pie, title, show
+import BasicClassifier
 
 
 def plot(e_type, range_list, classifier, k, info, p=1):
@@ -12,7 +13,7 @@ def plot(e_type, range_list, classifier, k, info, p=1):
     for threshold in range_list:
         if e_type == "tf":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tf")
-            recall_c, precision_c ,c,d= classifier.estimation(pred)
+            recall_c, precision_c, c, d = classifier.estimation(pred)
         elif e_type == "tfidf":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tfidf")
             recall_c, precision_c = classifier.estimation(pred)
@@ -21,7 +22,7 @@ def plot(e_type, range_list, classifier, k, info, p=1):
             recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "bernoulli":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "bernoulli")
-            recall_c, precision_c,c,d = classifier.estimation(pred)
+            recall_c, precision_c, c, d = classifier.estimation(pred)
         elif e_type == "kn":
             pred = classifier.predict_kn(classifier.test_data, threshold, k)
             recall_c, precision_c, c, d = classifier.estimation(pred)
@@ -43,6 +44,7 @@ def plot(e_type, range_list, classifier, k, info, p=1):
 
         plot_name = classifier.name + ".png"
         # plt.savefig(plot_name)
+    return recall_list, precision_list
 
 
 def plot_compare(range_list, classifier, classifier_2, info):
@@ -50,7 +52,6 @@ def plot_compare(range_list, classifier, classifier_2, info):
     recall_list_2, precision_list_2, recall_c_2, precision_c_2 = [], [], -1, -1
 
     for threshold in range_list:
-
         pred = classifier.predict_with_threshold(classifier.test_data, threshold)
         recall_c, precision_c = classifier.estimation(pred)
 
@@ -67,6 +68,38 @@ def plot_compare(range_list, classifier, classifier_2, info):
     plt.xlabel('Recall')
     plt.ylabel('Precision')
     plt.title('Precision-Recall curve' + info)
+    plt.legend(loc="right")
+    plt.grid()
+    show()
+
+
+def plot_with_diff_features(data, range_list, e_type, feature_number_list):
+    class_c = 1
+    recall_matrix, precision_matrix = [], []
+    for n in feature_number_list:
+        vocab_list_n = data.vocab_feature[0:n]
+        print(vocab_list_n)
+        classifier = BasicClassifier.BasicClassifier(data.train_data.data, data.train_data.target,
+                                                               vocab_list_n, class_c, data.test_data.data,
+                                                               data.test_data.target, "basic")
+        classifier.fit()
+        if e_type == "bernoulli":
+            classifier.build_df_dict_train()
+
+        predict_result_n = classifier.predict_with_threshold(classifier.test_data, 0.5, e_type)
+        print("Acc of feature ", n, " is ", classifier.accuracy())
+        print(predict_result_n)
+
+        recall_list_n, precision_list_n = plot(e_type, range_list, classifier, 0, "info", 0)
+        recall_matrix.append(recall_list_n)
+        precision_matrix.append(precision_list_n)
+
+    for i in range(len(feature_number_list)):
+        plt.plot(recall_matrix[i], precision_matrix[i], label=feature_number_list[i])
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title(e_type + 'Precision-Recall curve with different number of features')
     plt.legend(loc="right")
     plt.grid()
     show()

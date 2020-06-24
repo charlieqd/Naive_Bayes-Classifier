@@ -27,7 +27,7 @@ def load_data(class_c, num_of_feature, filename):
 def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alpha):
     data = pickle.load(open(data_name, "rb"))
     print("test is ", len(data.vocab_feature))
-    vocab_list = data.vocab_feature[0:100]  # data.vocab_feature
+    vocab_list = data.vocab_feature[0:50]  # data.vocab_feature
     print(vocab_list)
     basic_classifier = BasicClassifier.BasicClassifier(data.train_data.data, data.train_data.target,
                                                        vocab_list, class_c, data.test_data.data, data.test_data.target,
@@ -42,7 +42,8 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
         predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "0-1", alpha)
     elif t_type == "bernoulli":
         basic_classifier.build_df_dict_train()
-        predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "bernoulli", alpha)
+        predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "bernoulli",
+                                                                 alpha)
 
     predict_result = basic_classifier.pred_result
     print("Truth is ")
@@ -95,22 +96,21 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
 
 
 if __name__ == '__main__':
-    class_c = 7
-    # class_c = 1
-    num_feature = 400
+    # class_c = 7
+    class_c = 1
+    num_feature = 200
     file_name = "data_" + str(num_feature) + ".pickle"
+    data_1 = pickle.load(open(file_name, "rb"))
     # file_name = "data_" + str(num_feature) + " " + class_c + ".pickle"
     # load_data(class_c, num_feature, file_name)
+
     threshold = 0.5
     alpha = 1
-    run_base_classifier(file_name, class_c, threshold, 0, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
+    # run_base_classifier(file_name, class_c, threshold, 0, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf", alpha)
     # k_max = 10
     # k = 1
     # run_kn_classifier(file_name, class_c, threshold, "plot_all", np.arange(0.01, 1, 0.01), "bernoulli", k_max, k, alpha)
-
-
-
-
-
+    feature_number_list = [5, 10, 20, 50, 100, 200]
+    Plot.plot_with_diff_features(data_1, np.arange(0.01, 1, 0.01), "bernoulli", feature_number_list)
