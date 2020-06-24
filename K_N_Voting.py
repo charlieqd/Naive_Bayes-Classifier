@@ -182,7 +182,7 @@ class KnClassifier(BasicClassifier):
 
         return recall_list, precision_list
 
-    def plot_kn(self, range_list):
+    def plot_kn(self, range_list, recall_r, precision_r):
         pred_prob = self.data_k_pred_prob_matrix
         k = self.k_max
         n = len(range_list)
@@ -210,10 +210,11 @@ class KnClassifier(BasicClassifier):
             counter += 1
 
         for i in range(self.k_max):
-            plt.plot(recall_matrix[i], precision_matrix[i], label=i)
-            plt.xlabel('Recall')
-            plt.ylabel('Precision')
-            plt.title('Precision-Recall curve of kn classifier')
-            plt.legend(loc="right")
-            plt.grid()
+            plt.plot(recall_matrix[i], precision_matrix[i], label=i+1)
+        plt.plot(recall_r, precision_r, label="Basic Bernoulli Model", linestyle='dashed')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title('Precision-Recall curve of kn classifier')
+        plt.legend(loc="right")
+        plt.grid()
         plt.show()

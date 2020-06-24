@@ -7,20 +7,20 @@ from pylab import figure, axes, pie, title, show
 import BasicClassifier
 
 
-def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_r=None):
+def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_r=None, alpha=1):
     recall_list, precision_list, threshold_list, recall_c, precision_c = [], [], [], -1, -1
     for threshold in range_list:
         if e_type == "tf":
-            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tf")
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tf", alpha)
             recall_c, precision_c, c, d = classifier.estimation(pred)
         elif e_type == "tfidf":
-            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tfidf")
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tfidf",  alpha)
             recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "0-1":
-            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "0-1")
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "0-1",  alpha)
             recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "bernoulli":
-            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "bernoulli")
+            pred = classifier.predict_with_threshold(classifier.test_data, threshold, "bernoulli",  alpha)
             recall_c, precision_c, c, d = classifier.estimation(pred)
         elif e_type == "kn":
             pred = classifier.predict_kn(classifier.test_data, threshold, k)
@@ -35,7 +35,7 @@ def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_
     print(threshold_list)
     if p == 1:
         plt.plot(recall_list, precision_list, label=k + 1)
-        plt.plot(recall_r, precision_r, label="Basic Bernoulli Model")
+        plt.plot(recall_r, precision_r, label="Basic Bernoulli Model", linestyle='dashed')
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Precision-Recall curve' + info)
