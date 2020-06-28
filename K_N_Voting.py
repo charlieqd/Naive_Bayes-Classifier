@@ -62,8 +62,8 @@ class KnClassifier(BasicClassifier):
     def log_prob_voting_kn_bernoulli(self, index, class_selected, class_not_selected, alpha=1):
         # alpha = 1
         feature_prob = []
-        # print("test data is ")
-        # print(self.tf_dict[index])
+        print("test data is ")
+        print(self.tf_dict[index])
         for word in self.vocab_feature:
             total_doc = self.result[class_selected]["DOC_OF_CLASS"] + self.result[class_not_selected]["DOC_OF_CLASS"]
             doc_with_word = self.df_dict_train[class_selected][word] + self.df_dict_train[class_not_selected][word] + alpha * 2
@@ -71,17 +71,17 @@ class KnClassifier(BasicClassifier):
             doc_with_word_in_class = self.df_dict_train[class_selected][word] + alpha
             doc_without_word_in_class = self.result[class_selected]["DOC_OF_CLASS"] - doc_with_word_in_class
             if word in self.tf_dict[index].keys():
-                # print(word)
-                # acond_prob = doc_with_word_in_class/doc_with_word
-                # print(acond_prob)
+                print(word)
+                acond_prob = doc_with_word_in_class/doc_with_word
+                print(acond_prob)
                 cond_prob = np.log(doc_with_word_in_class) - np.log(doc_with_word)
                 feature_prob.append(cond_prob)
             else:
-                # acond_prob = doc_without_word_in_class/doc_without_word
-                # print(word)
-                # print(acond_prob)
-                # bcond_prob = doc_with_word_in_class / doc_with_word
-                # print(bcond_prob)
+                acond_prob = doc_without_word_in_class/doc_without_word
+                print(word)
+                print(acond_prob)
+                bcond_prob = doc_with_word_in_class / doc_with_word
+                print(bcond_prob)
                 cond_prob = np.log(doc_without_word_in_class) - np.log(doc_without_word)
                 feature_prob.append(cond_prob)
 

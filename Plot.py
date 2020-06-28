@@ -34,13 +34,14 @@ def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_
     print("precision list is ", precision_list)
     print(threshold_list)
     if p == 1:
-        plt.plot(recall_list, precision_list, label=k + 1)
-        plt.plot(recall_r, precision_r, label="Basic Bernoulli Model", linestyle='dashed')
+        plt.plot(recall_list, precision_list, label=k)
+        plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Precision-Recall curve' + info)
         plt.grid()
-        plt.legend(loc="right")
+        # plt.legend(loc="right")
+        plt.legend(bbox_to_anchor=(1.5, 1))
         show()
 
         plot_name = classifier.name + ".png"

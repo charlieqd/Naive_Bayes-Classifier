@@ -87,15 +87,15 @@ def build_df_dict(data_1, vocab):
 class_c = 1
 num_feature = 200
 k_max = 5
-k = 3
+k = 1
 threshold = 0.5
 file_name = "data_" + str(num_feature) + ".pickle"
 data = pickle.load(open(file_name, "rb"))
 print("test is ", len(data.vocab_feature))
-vocab_list = data.vocab_feature[0:50]  # data.vocab_feature
+vocab_list = data.vocab_feature[0:5]  # data.vocab_feature
 print(vocab_list)
-test_data = data.test_data.data
-test_target = data.test_data.target
+test_data = data.test_data.data[9:10]
+test_target = data.test_data.target[9:10]
 kn_classifier = K_N_Voting.KnClassifier(data.train_data.data, data.train_data.target,
                                         vocab_list, class_c, test_data,
                                         test_target, "kn", k_max)
