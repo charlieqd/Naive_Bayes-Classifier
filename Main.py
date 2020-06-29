@@ -28,7 +28,7 @@ def load_data(class_c, num_of_feature, filename):
 def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alpha):
     data = pickle.load(open(data_name, "rb"))
     print("data vocab is ", len(data.vocab_feature))
-    vocab_list = data.vocab_feature[0:300]  # data.vocab_feature
+    vocab_list = data.vocab_feature[0:100]  # data.vocab_feature
     print(vocab_list)
     basic_classifier = BasicClassifier.BasicClassifier(data.train_data.data, data.train_data.target,
                                                        vocab_list, class_c, data.test_data.data, data.test_data.target,
@@ -42,7 +42,6 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
     elif t_type == "0-1":
         predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "0-1", alpha)
     elif t_type == "bernoulli":
-        basic_classifier.build_df_dict_train()
         predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "bernoulli",
                                                                  alpha)
 
@@ -59,6 +58,14 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
     if plot == 1:
         print(t_list)
         recall_list, precision_list = Plot.plot(t_type, t_list, basic_classifier, 0, ' Multinomial NB with ' + t_type, 0)
+
+    plt.plot(recall_list, precision_list)
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title('Precision-Recall curve')
+    plt.grid()
+    plt.legend(bbox_to_anchor=(1.5, 1))
+    show()
 
     return recall_list, precision_list
 
@@ -102,7 +109,7 @@ if __name__ == '__main__':
     # class_c = 7
     class_c = 1
     num_feature = 500
-    file_name = "new_data_" + str(num_feature) + ".pickle"
+    file_name = "new_data_" + str(num_feature) + ".pickle"  # add stemming
     # data_1 = pickle.load(open(file_name, "rb"))
     # file_name = "data_" + str(num_feature) + " " + class_c + ".pickle"
     # load_data(class_c, num_feature, file_name)
@@ -111,8 +118,9 @@ if __name__ == '__main__':
     # recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
     # print(recall_r)
     # print(precision_r)
-    run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf", alpha)
+    run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
     # k_max = 10
     # k = 1
     # run_kn_classifier(file_name, class_c, threshold, "no_plot", np.arange(0.01, 1, 0.01), "bernoulli", k_max, k)

@@ -18,12 +18,13 @@ class BasicClassifier:
         self.vocab_feature = vocab_feature
         self.class_c = class_c
         self.result = {}  # tf result
-        self.tfidf_result = {}  #tfidf result
+        self.tfidf_result = {}  # tfidf result
         self.df_dict_train = {}
         self.tfidf_dict_train = {}
         self.df_dict_test = {}
         self.tf_dict_test = {}
         self.tfidf_dict_test = {}
+        self.bernoulli_result = {}
         self.y_test = []
         self.pred_result = []
         self.pred_prob = []
@@ -55,16 +56,10 @@ class BasicClassifier:
             self.doc_to_vocab[i]["TOTAL_WORDS"] = total_word
 
     def fit(self):
-        print("in fit")
         self.dict_build()
-        print("1")
         self.build_df_dict_train()
-        print("2")
         self.build_tfidf_dict_train()
         total_doc = len(self.train_data)
-        # self.result["TOTAL_DOC"] = total_doc
-        # self.result["CLASS_C"] = {}
-        # self.result["NOT_CLASS_C"] = {}
         self.result = {"TOTAL_DOC": total_doc, "CLASS_C": {}, "NOT_CLASS_C": {}}
         self.tfidf_result = {"CLASS_C": {}, "NOT_CLASS_C": {}}
         classes, doc_counters = np.unique(self.train_target, return_counts=True)
@@ -77,7 +72,6 @@ class BasicClassifier:
             self.result["NOT_CLASS_C"][word] = 0
             self.tfidf_result["CLASS_C"][word] = 0
             self.tfidf_result["NOT_CLASS_C"][word] = 0
-        print("3")
         for i in range(len(self.train_data)):
             if self.train_target[i] == self.class_c:
                 for word in self.doc_to_vocab[i].keys():
@@ -91,55 +85,21 @@ class BasicClassifier:
                         continue
                     self.result["NOT_CLASS_C"][word] += self.doc_to_vocab[i][word]
                     self.tfidf_result["NOT_CLASS_C"][word] += self.tfidf_dict_train[i][word]
-        print("4")
+
         self.tf_dict_test = self.build_tf_dict_test()
-        a = "year"
-        if a in self.tf_dict_test.keys():
-            print("111")
-        print("5")
         self.df_dict_test = self.build_df_dict_test()
-        print("6")
-        if a in self.df_dict_test.keys():
-            print("222")
         self.tfidf_dict_test = self.build_tfidf_dict_test()
-        print("7")
-
-        # total_word_class_c, total_word_not_class = 0, 0
-        # for feature_word in self.vocab_feature:
-        #     total_word_class_c += self.result["CLASS_C"][feature_word]
-        #     total_word_not_class += self.result["NOT_CLASS_C"][feature_word]
-
-        # for i in range(len(self.train_data)):
-        #     self.doc_to_vocab_tfidf[i] = {}
-        #     for word in self.doc_to_vocab[i].keys():
-        #         if word == "TOTAL_WORDS":
-        #             continue
-        #         term_freq = self.doc_to_vocab[i][word] / self.doc_to_vocab[i]["TOTAL_WORDS"]
-        #         tf_idf = np.log(total_doc + 1) - np.log(self.df[word] + 1) * term_freq
-        #         self.doc_to_vocab_tfidf[i][word] = tf_idf
-
-        # self.tfidf_result_build()
+        self.build_bernoulli_result()
 
     def build_df_dict_train(self):
-        tokenizer = nltk.RegexpTokenizer(r"\w+")
         df_dict = {}
-        ps = PorterStemmer()
         for word in self.vocab_feature:
             df_dict[word] = 0
         for word_1 in self.vocab_feature:
             for i in range(len(self.doc_to_vocab)):
                 if word_1 in self.doc_to_vocab[i].keys():
                     df_dict[word_1] += 1
-        # i = 0
-        # for data in self.train_data:
-        #     print(i)
-        #     for word_1 in self.vocab_feature:
-        #         for word_2 in tokenizer.tokenize(data):
-        #             word_2 = ps.stem(word_2)
-        #             if word_1.lower() == word_2.lower():
-        #                 df_dict[word_1] += 1
-        #                 break
-        #     i += 1
+
         self.df_dict_train = df_dict
 
     def build_tfidf_dict_train(self):
@@ -156,7 +116,7 @@ class BasicClassifier:
                 if word == "TOTAL_WORDS":
                     continue
                 tf = self.doc_to_vocab[i][word]
-                idf = np.log((n + 1)/(self.df_dict_train[word] + 1)) + 1
+                idf = np.log((n + 1) / (self.df_dict_train[word] + 1)) + 1
                 tf_idf = tf * idf
                 tfidf_dict[i][word] = tf_idf
         self.tfidf_dict_train = tfidf_dict
@@ -180,29 +140,17 @@ class BasicClassifier:
         return tf_dict
 
     def build_df_dict_test(self):
-        tokenizer = nltk.RegexpTokenizer(r"\w+")
         df_dict = {}
-        ps = PorterStemmer()
         for element in self.vocab_feature:
             df_dict[element] = 0
-
         for word in df_dict.keys():
             for i in range(len(self.tf_dict_test)):
                 if word in self.tf_dict_test[i].keys():
                     df_dict[word] += 1
-        #
-        # for data in self.test_data:
-        #     for word_1 in df_dict.keys():
-        #         for word_2 in tokenizer.tokenize(data):
-        #             word_2 = ps.stem(word_2)
-        #             if word_1.lower() == word_2.lower():
-        #                 df_dict[word_1] += 1
-        #                 break
         return df_dict
 
     def build_tfidf_dict_test(self):
         tfidf_dict = {}
-        tokenizer = nltk.RegexpTokenizer(r"\w+")
         n = len(self.test_data)  # number of document
         for i in range(len(self.test_data)):
             tfidf_dict[i] = {}
@@ -210,21 +158,34 @@ class BasicClassifier:
             # for element in self.tf_dict_test[i].keys():
             #     total_words += self.tf_dict_test[i][element]
             for word in self.tf_dict_test[i].keys():
-                # tokenizer.tokenize(self.test_data[i]):
-                # word = word.lower()
-                # if word in self.vocab_feature:
                 # tf = self.tf_dict_test[i][word] / total_words
                 tf = self.tf_dict_test[i][word]
-                idf = np.log((n + 1)/(self.df_dict_test[word] + 1)) + 1
+                idf = np.log((n + 1) / (self.df_dict_test[word] + 1)) + 1
                 tf_idf = tf * idf
                 tfidf_dict[i][word] = tf_idf
 
         return tfidf_dict
 
+    def build_bernoulli_result(self):
+        bernoulli_result = {"CLASS_C": {}, "NOT_CLASS_C": {}}
+        for element in self.vocab_feature:
+            bernoulli_result["CLASS_C"][element] = 0
+            bernoulli_result["NOT_CLASS_C"][element] = 0
+        for i in range(len(self.doc_to_vocab)):
+            for word in self.doc_to_vocab[i].keys():
+                if word == "TOTAL_WORDS":
+                    continue
+                if self.train_target[i] == self.class_c:
+                    bernoulli_result["CLASS_C"][word] += 1
+                else:
+                    bernoulli_result["NOT_CLASS_C"][word] += 1
+
+        self.bernoulli_result = bernoulli_result
+
     def log_prob(self, class_selected, index, t_type, alpha=1):
         count = 0
         output = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(
-             self.result["TOTAL_DOC"])  # log(pc) = log(Nc) - log(N)
+            self.result["TOTAL_DOC"])  # log(pc) = log(Nc) - log(N)
         total_word_class_tf = 0
         total_word_class_tfidf = 0
         for feature_word in self.vocab_feature:
@@ -232,11 +193,11 @@ class BasicClassifier:
             total_word_class_tfidf += self.tfidf_result[class_selected][feature_word]
         if t_type == "bernoulli":
             for feature_word in self.vocab_feature:
-                cond_prob = (self.df_dict_train[class_selected][feature_word] + alpha) / (
-                            self.result[class_selected]["DOC_OF_CLASS"] + alpha*2)
+                cond_prob = (self.bernoulli_result[class_selected][feature_word] + alpha) / (
+                        self.result[class_selected]["DOC_OF_CLASS"] + alpha * 2)
                 # print(self.df_dict_train[class_selected][feature_word], self.result[class_selected]["DOC_OF_CLASS"])
                 # print(feature_word, " cond is ", cond_prob)
-                cond_prob_log = np.log(self.df_dict_train[class_selected][feature_word] + alpha) - np.log(
+                cond_prob_log = np.log(self.bernoulli_result[class_selected][feature_word] + alpha) - np.log(
                     self.result[class_selected]["DOC_OF_CLASS"] + alpha * 2)
                 if feature_word in self.tf_dict_test[index].keys():
                     output += cond_prob_log
@@ -249,11 +210,13 @@ class BasicClassifier:
                 count += 1
                 if t_type == "tf":
                     word_occurrence_in_class = self.result[class_selected][word] + alpha  # Tct + 1
-                    curr_word_prob = np.log(word_occurrence_in_class) - np.log(total_word_class_tf + len(self.vocab_feature) * alpha)  # log P(d|C) = log(Tct + 1) - log(Tct' + |V|)
+                    curr_word_prob = np.log(word_occurrence_in_class) - np.log(total_word_class_tf + len(
+                        self.vocab_feature) * alpha)  # log P(d|C) = log(Tct + 1) - log(Tct' + |V|)
                     output += curr_word_prob * self.tf_dict_test[index][word]
                 elif t_type == "tfidf":
                     word_occurrence_in_class = self.tfidf_result[class_selected][word] + alpha  # Tct + 1
-                    curr_word_prob = np.log(word_occurrence_in_class) - np.log(total_word_class_tfidf + len(self.vocab_feature) * alpha)  # log P(d|C) = log(Tct + 1) - log(Tct' + |V|)
+                    curr_word_prob = np.log(word_occurrence_in_class) - np.log(total_word_class_tfidf + len(
+                        self.vocab_feature) * alpha)  # log P(d|C) = log(Tct + 1) - log(Tct' + |V|)
                     output += curr_word_prob * self.tfidf_dict_test[index][word]
                 elif t_type == "0-1":
                     if self.tf_dict_test[index][word] > 0:
