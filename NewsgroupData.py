@@ -3,11 +3,14 @@ import operator
 import numpy as np
 from string import punctuation
 from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
 from sklearn.datasets import fetch_20newsgroups
 
 
 class Newsgroups_data:
     def __init__(self, class_c):
+        self.train_cat = ['alt.atheism', 'comp.graphics']
+        # self.train_data = fetch_20newsgroups(subset='train',  categories=self.train_cat, remove=('headers', 'footers', 'quotes'))
         self.train_data = fetch_20newsgroups(subset='train', remove=('headers', 'footers', 'quotes'))
         self.test_data = fetch_20newsgroups(subset='test', remove=('headers', 'footers', 'quotes'))
         self.class_c = class_c
@@ -41,19 +44,22 @@ class Newsgroups_data:
 
         ### c. Build vocabulary list which has all the words and a dict doc -> word
         vocab = []
+        ps = PorterStemmer()
         for doc in self.train_data.data:
             for word in tokenizer.tokenize(doc):
+                word = ps.stem(word)
                 if word.lower() not in stopWords:
                     if word.lower() not in vocab:
                         vocab.append(word.lower())
 
-        print(len(vocab))
+        print("total words in train data is ", len(vocab))
 
         doc_to_word = {}
         for i in range(len(self.train_data.data)):
             doc_to_word[i] = []
             doc = self.train_data.data[i]
             for word in tokenizer.tokenize(doc):
+                word = ps.stem(word)
                 if word.lower() not in stopWords and word.lower() not in doc_to_word[i]:
                     doc_to_word[i].append(word.lower())
         print(len(doc_to_word))

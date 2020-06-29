@@ -7,7 +7,7 @@ from pylab import figure, axes, pie, title, show
 import BasicClassifier
 
 
-def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_r=None, alpha=1):
+def plot(e_type, range_list, classifier, k, info, p=0, recall_r=None, precision_r=None, alpha=1):
     recall_list, precision_list, threshold_list, recall_c, precision_c = [], [], [], -1, -1
     for threshold in range_list:
         if e_type == "tf":
@@ -15,7 +15,8 @@ def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_
             recall_c, precision_c, c, d = classifier.estimation(pred)
         elif e_type == "tfidf":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tfidf",  alpha)
-            recall_c, precision_c = classifier.estimation(pred)
+            recall_c, precision_c, c, d = classifier.estimation(pred)
+            print("recall_c", recall_c, precision_c, c, d)
         elif e_type == "0-1":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "0-1",  alpha)
             recall_c, precision_c = classifier.estimation(pred)
@@ -29,6 +30,8 @@ def plot(e_type, range_list, classifier, k, info, p=1, recall_r=None, precision_
         recall_list.append(recall_c)
         precision_list.append(precision_c)
         threshold_list.append(threshold)
+        if precision_c > 0.999:
+            break
 
     print("recall list is ", recall_list)
     print("precision list is ", precision_list)
