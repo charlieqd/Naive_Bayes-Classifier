@@ -36,6 +36,13 @@ class BasicClassifier:
             else:
                 self.y_test.append(0)
 
+    # def truth_build(self):
+    #     for i in range(len(self.test_target)):
+    #         if self.test_target[i] == self.class_c:
+    #             self.y_test.append(0)
+    #         else:
+    #             self.y_test.append(1)
+
     def dict_build(self):
         self.truth_build()
         nltk.download("punkt")
@@ -188,23 +195,32 @@ class BasicClassifier:
             self.result["TOTAL_DOC"])  # log(pc) = log(Nc) - log(N)
         total_word_class_tf = 0
         total_word_class_tfidf = 0
+        # print("Total doc is ", self.result[class_selected]["DOC_OF_CLASS"])
         for feature_word in self.vocab_feature:
             total_word_class_tf += self.result[class_selected][feature_word]  # sum of Tct'
             total_word_class_tfidf += self.tfidf_result[class_selected][feature_word]
         if t_type == "bernoulli":
+            # i = 0
+            # print(self.test_data[index])
             for feature_word in self.vocab_feature:
+                # print("feature word is ", feature_word)
                 cond_prob = (self.bernoulli_result[class_selected][feature_word] + alpha) / (
                         self.result[class_selected]["DOC_OF_CLASS"] + alpha * 2)
+                # print("in class that;s many document has that word", self.bernoulli_result[class_selected][feature_word])
                 # print(self.df_dict_train[class_selected][feature_word], self.result[class_selected]["DOC_OF_CLASS"])
                 # print(feature_word, " cond is ", cond_prob)
                 cond_prob_log = np.log(self.bernoulli_result[class_selected][feature_word] + alpha) - np.log(
                     self.result[class_selected]["DOC_OF_CLASS"] + alpha * 2)
                 if feature_word in self.tf_dict_test[index].keys():
+                    # i += 1
                     output += cond_prob_log
+                    # print("in ", cond_prob)
                     # output_1 = cond_prob * output_1
                 else:
                     output += np.log(1 - cond_prob)
+                    # print("not in ", 1 - cond_prob)
                     # output_1 = output_1 * (1 - cond_prob)
+            # print("how many words ", i)
         else:
             for word in self.tf_dict_test[index].keys():
                 count += 1
@@ -244,14 +260,21 @@ class BasicClassifier:
         target_pred = []
         pred_prob = []  # list of probability that belongs to class_c
         for i in range(len(test_data)):
-            best_pred = 0
+
             p_c, c0 = self.log_prob("CLASS_C", i, t_type, alpha)
             p_not_c, c1 = self.log_prob("NOT_CLASS_C", i, t_type, alpha)
             # print(p_c)
             # print(p_not_c)
+            best_pred = 0
             t = 1 - threshold
             if p_c / p_not_c < np.log(threshold) / np.log(t):
                 best_pred = 1
+
+            # best_pred = 0
+            # if p_c > p_not_c:
+            #     best_pred = 1
+
+
             # if t == 0:
             #     best_pred = 0
             # else:

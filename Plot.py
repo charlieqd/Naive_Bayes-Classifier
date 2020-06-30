@@ -38,7 +38,7 @@ def plot(e_type, range_list, classifier, k, info, p=0, recall_r=None, precision_
     print(threshold_list)
     if p == 1:
         plt.plot(recall_list, precision_list, label=k)
-        plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
+        # plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Precision-Recall curve' + info)
@@ -78,8 +78,7 @@ def plot_compare(range_list, classifier, classifier_2, info):
     show()
 
 
-def plot_with_diff_features(data, range_list, e_type, feature_number_list):
-    class_c = 1
+def plot_with_diff_features(data, range_list, e_type, feature_number_list, class_c):
     recall_matrix, precision_matrix = [], []
     for n in feature_number_list:
         vocab_list_n = data.vocab_feature[0:n]
@@ -88,8 +87,6 @@ def plot_with_diff_features(data, range_list, e_type, feature_number_list):
                                                      vocab_list_n, class_c, data.test_data.data,
                                                      data.test_data.target, "basic")
         classifier.fit()
-        if e_type == "bernoulli":
-            classifier.build_df_dict_train()
 
         predict_result_n = classifier.predict_with_threshold(classifier.test_data, 0.5, e_type)
         print("Acc of feature ", n, " is ", classifier.accuracy())
@@ -104,7 +101,7 @@ def plot_with_diff_features(data, range_list, e_type, feature_number_list):
 
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title(e_type + 'Precision-Recall curve with different number of features')
-    plt.legend(loc="right")
+    plt.title(e_type + ' Precision-Recall curve with different number of features')
+    plt.legend(bbox_to_anchor=(1.5, 1))
     plt.grid()
     show()

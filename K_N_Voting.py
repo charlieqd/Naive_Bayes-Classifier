@@ -2,6 +2,7 @@ from BasicClassifier import BasicClassifier
 import numpy as np
 import nltk
 import matplotlib.pyplot as plt
+from nltk.stem import PorterStemmer
 from pylab import figure, axes, pie, title, show
 from nltk import word_tokenize
 from sklearn.metrics import accuracy_score
@@ -17,12 +18,14 @@ class KnClassifier(BasicClassifier):
     def kn_fit(self):
         self.fit()
 
-    def log_prob_voting_kn_multi(self, test_data, class_selected, class_not_selected, alpha=1):
-        # alpha = 1
+    def log_prob_voting_kn_multi(self, index, class_selected, class_not_selected, alpha=1):
+        ps = PorterStemmer()
         tokenizer = nltk.RegexpTokenizer(r"\w+")
         prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
         feature_prob = []
+        test_data = self.test_data[index]
         for word in tokenizer.tokenize(test_data):
+            word = ps.stem(word)
             word = word.lower()
             if word in self.result[class_selected].keys():
                 word_occurrence_in_class = self.result[class_selected][word] + alpha  # Tct + 1
@@ -35,6 +38,22 @@ class KnClassifier(BasicClassifier):
             feature_prob.append(prior)
 
         return feature_prob
+
+    def log_prob_voting_kn_test1(self, index, class_selected, class_not_selected, alpha=1):
+        # 0 vs 1
+        prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
+        feature_prob = []
+        for word in self.tf_dict_test[index].keys():
+            word_occurrence_in_class = self.result[class_selected][word] + alpha  # Tct + 1
+            word_occurrence = self.result[class_selected][word] + self.result[class_not_selected][word] + alpha * 2
+            output = np.log(word_occurrence_in_class) - np.log(word_occurrence)
+            feature_prob.append(output)
+        if not feature_prob:
+            feature_prob.append(prior)
+
+        return feature_prob
+
+
     #
     # def log_prob_voting_kn_tfidf(self, test_data, class_selected, class_not_selected):
     #     tokenizer = nltk.RegexpTokenizer(r"\w+")
@@ -60,7 +79,6 @@ class KnClassifier(BasicClassifier):
     #     return feature_prob
 
     def log_prob_voting_kn_bernoulli(self, index, class_selected, class_not_selected, alpha=1):
-        # alpha = 1
         feature_prob = []
         print("test data is ")
         print(self.tf_dict[index])
@@ -110,6 +128,49 @@ class KnClassifier(BasicClassifier):
 
         self.bottom_up_table = bottom_up
 
+    def log_test(self, index, alpha=1):
+        ps = PorterStemmer()
+        tokenizer = nltk.RegexpTokenizer(r"\w+")
+        prior = np.log(self.result["CLASS_C"]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
+        prior_n = np.log(self.result["NOT_CLASS_C"]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
+        c = np.log(self.result["CLASS_C"]["DOC_OF_CLASS"])
+        nc = np.log(self.result["NOT_CLASS_C"]["DOC_OF_CLASS"])
+        feature_prob = []
+        feature_n_prob = []
+        test_data = self.test_data[index]
+        total_word_c = len(self.vocab_feature) * alpha
+        total_word_nc = len(self.vocab_feature) * alpha
+        for element in self.result["CLASS_C"].keys():
+            total_word_c += self.result["CLASS_C"][element]
+        for e in self.result["NOT_CLASS_C"].keys():
+            total_word_nc += self.result["NOT_CLASS_C"][e]
+        for word in tokenizer.tokenize(test_data):
+            word = ps.stem(word)
+            word = word.lower()
+            if word in self.result["CLASS_C"].keys():
+                word_occurrence_in_class = self.result["CLASS_C"][word] + alpha
+                word_occurrence_in_not_class = self.result["NOT_CLASS_C"][word] + alpha
+                log_a = np.log(word_occurrence_in_class) - np.log(total_word_c) + np.log(c)
+                log_b = np.log(word_occurrence_in_not_class) - np.log(total_word_nc) + np.log(nc)
+                log_k = log_a - log_b
+                a = 0
+                if log_k > 0:
+                    a = log_k
+                output = log_k - (a + np.log( np.exp(0 - a) + np.exp(log_k - a) ))
+                feature_prob.append(output)
+                feature_n_prob.append(output-log_k)
+            else:
+                continue  # we don't care about the words not in the feature list
+        if not feature_prob:
+            feature_prob.append(prior)
+        if not feature_n_prob:
+            feature_n_prob.append(prior_n)
+
+        if len(feature_prob) != len(feature_n_prob):
+            print("Isuueuhdsfjhdsfhbhg")
+
+        return feature_prob, feature_n_prob
+
     def kn_voting(self, test_data, v_type, alpha=1):
 
         target_pred = np.zeros((self.k_max, len(test_data)))
@@ -119,8 +180,8 @@ class KnClassifier(BasicClassifier):
             p_c_list, p_not_c_list = [], []
             data = test_data[i]
             if v_type == "multi":
-                p_c_list = self.log_prob_voting_kn_multi(data, "CLASS_C", "NOT_CLASS_C", alpha)
-                p_not_c_list = self.log_prob_voting_kn_multi(data, "NOT_CLASS_C", "CLASS_C", alpha)
+                p_c_list = self.log_prob_voting_kn_multi(i, "CLASS_C", "NOT_CLASS_C", alpha)
+                p_not_c_list = self.log_prob_voting_kn_multi(i, "NOT_CLASS_C", "CLASS_C", alpha)
             # elif v_type == "tfidf":
             #     p_c_list = self.log_prob_voting_kn_tfidf(data, "CLASS_C", "NOT_CLASS_C")
             #     p_not_c_list = self.log_prob_voting_kn_tfidf(data, "NOT_CLASS_C", "CLASS_C")
@@ -132,6 +193,14 @@ class KnClassifier(BasicClassifier):
                 # print("pclist is ")
                 # print(p_c_list)
                 # print(p_not_c_list)
+            elif v_type == "test":
+                p_c_list, p_not_c_list = self.log_test(i)
+            elif v_type == "test1":
+                p_c_list = self.log_prob_voting_kn_test1(i, "CLASS_C", "NOT_CLASS_C", alpha)
+                p_not_c_list = self.log_prob_voting_kn_test1(i, "NOT_CLASS_C", "CLASS_C", alpha)
+                if len(p_c_list) != len(p_not_c_list):
+                    print(len(p_c_list), len(p_not_c_list))
+                    print("probibfuigfs")
 
             n = len(p_c_list)
             p_c_list.insert(0, -1)
@@ -159,6 +228,7 @@ class KnClassifier(BasicClassifier):
     def predict_kn(self, test_data, threshold, k):
         # need to run kn_voting first
         prediction = []
+        # print("shape is ", self.data_k_pred_prob_matrix.shape)
         for i in range(len(test_data)):
             pred = 0
             if self.data_k_pred_prob_matrix[k - 1][i] > np.log(threshold):
@@ -181,8 +251,8 @@ class KnClassifier(BasicClassifier):
             else:
                 total_pred_positive = counts[1]
 
-            for i in range(len(self.true_pred)):
-                if self.true_pred[i] == 1:
+            for i in range(len(self.y_test)):
+                if self.y_test[i] == 1:
                     total_actual_positive += 1
                     if predict_result_k[i] == 1:
                         true_positive += 1
@@ -195,7 +265,7 @@ class KnClassifier(BasicClassifier):
 
         return recall_list, precision_list
 
-    def plot_kn(self, range_list, recall_r, precision_r):
+    def plot_kn(self, range_list):
         pred_prob = self.data_k_pred_prob_matrix
         k = self.k_max
         n = len(range_list)
@@ -224,7 +294,7 @@ class KnClassifier(BasicClassifier):
 
         for i in range(self.k_max):
             plt.plot(recall_matrix[i], precision_matrix[i], label=i+1)
-        plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
+        # plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Precision-Recall curve of kn classifier')
@@ -232,3 +302,5 @@ class KnClassifier(BasicClassifier):
         plt.legend(bbox_to_anchor=(1.5, 1))
         plt.grid()
         plt.show()
+
+        return recall_matrix, precision_matrix
