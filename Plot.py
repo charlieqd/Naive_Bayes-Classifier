@@ -56,6 +56,8 @@ def plot_with_diff_alpha(data, range_list, e_type, feature_num, alpha_list, clas
                                                  vocab_list_n, class_c, data.test_data.data,
                                                  data.test_data.target, "basic")
     classifier.fit()
+    if e_type == "bernoulli":
+        classifier.bernoulli_fit()
 
     for alpha in alpha_list:
         recall_list_n, precision_list_n = plot(e_type, range_list, classifier, 0, "info", 0, None, None, alpha)
@@ -82,6 +84,8 @@ def plot_with_diff_features(data, range_list, e_type, feature_number_list, class
                                                      vocab_list_n, class_c, data.test_data.data,
                                                      data.test_data.target, "basic")
         classifier.fit()
+        if e_type == "bernoulli":
+            classifier.bernoulli_fit()
 
         predict_result_n = classifier.predict_with_threshold(classifier.test_data, 0.5, e_type)
         print("Acc of feature ", n, " is ", classifier.accuracy())

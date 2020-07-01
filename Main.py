@@ -121,7 +121,7 @@ if __name__ == '__main__':
     threshold = 0.5
     alpha = 1
     feature_list = [5, 50, 100]
-    # data = pickle.load(open(file_name, "rb"))
+    data = pickle.load(open(file_name, "rb"))
     # Plot.plot_with_diff_features(data, np.arange(0.01, 1.02, 0.02), "bernoulli", feature_list, class_c)
     # recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
     # print(recall_r)
@@ -130,6 +130,8 @@ if __name__ == '__main__':
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf", alpha)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "0-1", alpha, 100)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.03, 0.02), "bernoulli", alpha, 20)
-    k_max = 100
-    k = 2
-    run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1.03, 0.02), "bernoulli", k_max, k)
+    # k_max = 100
+    # k = 2
+    # run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1.03, 0.02), "bernoulli", k_max, k)
+    alpha_list = [0.000001]
+    Plot.plot_with_diff_alpha(data, np.arange(0.01, 1.02, 0.02), "bernoulli", 10, alpha_list, class_c)
