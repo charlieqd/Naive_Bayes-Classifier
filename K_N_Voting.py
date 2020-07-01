@@ -216,6 +216,7 @@ class KnClassifier(BasicClassifier):
             counter += 1
 
         self.data_k_pred_prob_matrix = target_pred
+        print("3")
         # print("Target matrix is ")
         # print(target_pred)
         return target_pred
@@ -292,13 +293,16 @@ class KnClassifier(BasicClassifier):
                     plt.plot(recall_matrix[i], precision_matrix[i], label=i + 1)
             else:
                 for i in k_range:
-                    plt.plot(recall_matrix[i - 1], precision_matrix[i], label=i)
+                    print("recall list is ", recall_matrix[i - 1])
+                    print("precision list is ", precision_matrix[i-1])
+                    plt.plot(recall_matrix[i - 1], precision_matrix[i-1], label=i)
             if precision_base is not None:
                 plt.plot(recall_base, precision_base, label="Base Model", linestyle='dashed')
             plt.xlabel('Recall')
             plt.ylabel('Precision')
             plt.title('Precision-Recall curve of kn classifier')
-            plt.legend(bbox_to_anchor=(1.5, 1), title="K Value")
+            plt.legend(loc="right")
+            # plt.legend(bbox_to_anchor=(1.5, 1), title="K Value")
             plt.grid()
             plt.show()
 

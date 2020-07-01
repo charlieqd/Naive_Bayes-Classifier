@@ -71,10 +71,12 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
     return recall_list, precision_list
 
 
-def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k, alpha=1, recall_ref=None, precision_ref=None):
+def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k, alpha=1, recall_ref=None,
+                      precision_ref=None, num_feature=100, k_range=[], c_name="t"):
     data = pickle.load(open(data_name, "rb"))
     print("test is ", len(data.vocab_feature))
-    vocab_list = data.vocab_feature[0:50]  # data.vocab_feature
+    vocab_list = data.vocab_feature[0:num_feature]
+    print("Word using ", len(vocab_list))
     print(vocab_list)
     # kn_classifier = K_N_Voting.KnClassifier(data.train_data.data, data.train_data.target,
     #                                         data.vocab_feature, class_c, data.test_data.data,
@@ -83,6 +85,7 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
                                             vocab_list, class_c, data.test_data.data,
                                             data.test_data.target, "kn", k_max)
     kn_classifier.kn_fit()
+    print("finish fit")
     if c_type == "multi":
         kn_classifier.kn_voting(kn_classifier.test_data, "multi", alpha)
     elif c_type == "bernoulli":
@@ -103,11 +106,13 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
     print("acc is ", accuracy_score(kn_classifier.y_test, prediction))
     recall, precision, c, d = kn_classifier.estimation(prediction)
     print("precision and recall is ", precision, recall)
+
+    # pickle.dump(kn_classifier, file=open(c_name, "wb"))
     if plot == "plot_one":
         print(t_list)
         Plot.plot("kn", t_list, kn_classifier, k, 'K-N Voting Classifier with ' + c_type, 1, recall_ref, precision_ref)
     elif plot == "plot_all":
-        kn_classifier.plot_kn(t_list)
+        kn_classifier.plot_kn(t_list, 1, None, None, k_range)
 
 
 if __name__ == '__main__':
@@ -127,11 +132,28 @@ if __name__ == '__main__':
     # print(recall_r)
     # print(precision_r)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
-    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf", alpha)
-    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "0-1", alpha, 100)
-    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.03, 0.02), "bernoulli", alpha, 20)
-    # k_max = 100
-    # k = 2
-    # run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1.03, 0.02), "bernoulli", k_max, k)
-    alpha_list = [0.000001]
-    Plot.plot_with_diff_alpha(data, np.arange(0.01, 1.02, 0.02), "bernoulli", 10, alpha_list, class_c)
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "tfidf", alpha, 1600)
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "0-1", alpha, 1600)
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "bernoulli", alpha, 20)
+    # k_range = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
+    k_range = []
+    k_max = 30
+    k = 5
+    num_f = 100
+    # run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1.02, 0.02), "multi", k_max, k,
+    #                   alpha, None, None, 1600, k_range)
+    filename_t = "bernoulli_classifier_800"
+    run_kn_classifier(file_name, class_c, threshold, "plot_all", np.arange(0.01, 1.02, 0.02), "bernoulli", k_max, k, alpha, None, None, num_f, k_range)
+    # cla = pickle.load(open(filename_t, "rb"))
+    # prediction = cla.predict_kn(cla.test_data, threshold, k)
+    # print("Truth is ")
+    # print(cla.y_test)
+    # print("Predict result is ")
+    # print(prediction)
+    # print("acc is ", accuracy_score(cla.y_test, prediction))
+    # recall, precision, c, d = cla.estimation(prediction)
+    # print("precision and recall is ", precision, recall)
+    # print(cla.data_k_pred_prob_matrix)
+
+    # alpha_list = [0.000001]
+    # Plot.plot_with_diff_alpha(data, np.arange(0.01, 1.02, 0.02), "tf", 10, alpha_list, class_c)
