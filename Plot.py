@@ -16,10 +16,9 @@ def plot(e_type, range_list, classifier, k, info, p=0, recall_r=None, precision_
         elif e_type == "tfidf":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tfidf",  alpha)
             recall_c, precision_c, c, d = classifier.estimation(pred)
-            print("recall_c", recall_c, precision_c, c, d)
         elif e_type == "0-1":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "0-1",  alpha)
-            recall_c, precision_c = classifier.estimation(pred)
+            recall_c, precision_c, c, d = classifier.estimation(pred)
         elif e_type == "bernoulli":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "bernoulli",  alpha)
             recall_c, precision_c, c, d = classifier.estimation(pred)
@@ -30,8 +29,6 @@ def plot(e_type, range_list, classifier, k, info, p=0, recall_r=None, precision_
         recall_list.append(recall_c)
         precision_list.append(precision_c)
         threshold_list.append(threshold)
-        if precision_c > 0.999:
-            break
 
     print("recall list is ", recall_list)
     print("precision list is ", precision_list)
@@ -52,28 +49,26 @@ def plot(e_type, range_list, classifier, k, info, p=0, recall_r=None, precision_
     return recall_list, precision_list
 
 
-def plot_compare(range_list, classifier, classifier_2, info):
-    recall_list, precision_list, threshold_list, recall_c, precision_c = [], [], [], -1, -1
-    recall_list_2, precision_list_2, recall_c_2, precision_c_2 = [], [], -1, -1
+def plot_with_diff_alpha(data, range_list, e_type, feature_num, alpha_list, class_c):
+    vocab_list_n = data.vocab_feature[0:feature_num]
+    recall_matrix, precision_matrix = [], []
+    classifier = BasicClassifier.BasicClassifier(data.train_data.data, data.train_data.target,
+                                                 vocab_list_n, class_c, data.test_data.data,
+                                                 data.test_data.target, "basic")
+    classifier.fit()
 
-    for threshold in range_list:
-        pred = classifier.predict_with_threshold(classifier.test_data, threshold)
-        recall_c, precision_c = classifier.estimation(pred)
+    for alpha in alpha_list:
+        recall_list_n, precision_list_n = plot(e_type, range_list, classifier, 0, "info", 0, None, None, alpha)
+        recall_matrix.append(recall_list_n)
+        precision_matrix.append(precision_list_n)
 
-        pred_2 = classifier.predict_with_threshold_tfidf(classifier_2.test_data, threshold)
-        recall_c_2, precision_c_2 = classifier_2.estimation(pred_2)
+    for i in range(len(alpha_list)):
+        plt.plot(recall_matrix[i], precision_matrix[i], label=alpha_list[i])
 
-        recall_list.append(recall_c)
-        precision_list.append(precision_c)
-        recall_list_2.append(recall_c_2)
-        precision_list_2.append(precision_c_2)
-
-    plt.plot(recall_list, precision_list, label="TF")
-    plt.plot(recall_list_2, precision_list_2, label="TFIDF")
     plt.xlabel('Recall')
     plt.ylabel('Precision')
-    plt.title('Precision-Recall curve' + info)
-    plt.legend(loc="right")
+    plt.title(e_type + ' Precision-Recall curve with different Alpha')
+    plt.legend(bbox_to_anchor=(1.5, 1))
     plt.grid()
     show()
 

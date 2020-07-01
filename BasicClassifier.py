@@ -62,13 +62,34 @@ class BasicClassifier:
                         self.doc_to_vocab[i][word.lower()] = 1
             self.doc_to_vocab[i]["TOTAL_WORDS"] = total_word
 
-    def fit(self):
-        self.dict_build()
+    def tfidf_fit(self):
         self.build_df_dict_train()
         self.build_tfidf_dict_train()
+        self.tfidf_result = {"CLASS_C": {}, "NOT_CLASS_C": {}}
+        for word in self.vocab_feature:
+            self.tfidf_result["CLASS_C"][word] = 0
+            self.tfidf_result["NOT_CLASS_C"][word] = 0
+        for i in range(len(self.train_data)):
+            if self.train_target[i] == self.class_c:
+                for word in self.doc_to_vocab[i].keys():
+                    if word == "TOTAL_WORDS":
+                        continue
+                    self.tfidf_result["CLASS_C"][word] += self.tfidf_dict_train[i][word]
+            else:
+                for word in self.doc_to_vocab[i].keys():
+                    if word == "TOTAL_WORDS":
+                        continue
+                    self.tfidf_result["NOT_CLASS_C"][word] += self.tfidf_dict_train[i][word]
+        self.df_dict_test = self.build_df_dict_test()
+        self.tfidf_dict_test = self.build_tfidf_dict_test()
+
+    def bernoulli_fit(self):
+        self.build_bernoulli_result()
+
+    def fit(self):
+        self.dict_build()
         total_doc = len(self.train_data)
         self.result = {"TOTAL_DOC": total_doc, "CLASS_C": {}, "NOT_CLASS_C": {}}
-        self.tfidf_result = {"CLASS_C": {}, "NOT_CLASS_C": {}}
         classes, doc_counters = np.unique(self.train_target, return_counts=True)
 
         self.result["CLASS_C"]["DOC_OF_CLASS"] = doc_counters[self.class_c]
@@ -77,26 +98,20 @@ class BasicClassifier:
         for word in self.vocab_feature:
             self.result["CLASS_C"][word] = 0
             self.result["NOT_CLASS_C"][word] = 0
-            self.tfidf_result["CLASS_C"][word] = 0
-            self.tfidf_result["NOT_CLASS_C"][word] = 0
+
         for i in range(len(self.train_data)):
             if self.train_target[i] == self.class_c:
                 for word in self.doc_to_vocab[i].keys():
                     if word == "TOTAL_WORDS":
                         continue
                     self.result["CLASS_C"][word] += self.doc_to_vocab[i][word]
-                    self.tfidf_result["CLASS_C"][word] += self.tfidf_dict_train[i][word]
             else:
                 for word in self.doc_to_vocab[i].keys():
                     if word == "TOTAL_WORDS":
                         continue
                     self.result["NOT_CLASS_C"][word] += self.doc_to_vocab[i][word]
-                    self.tfidf_result["NOT_CLASS_C"][word] += self.tfidf_dict_train[i][word]
 
         self.tf_dict_test = self.build_tf_dict_test()
-        self.df_dict_test = self.build_df_dict_test()
-        self.tfidf_dict_test = self.build_tfidf_dict_test()
-        self.build_bernoulli_result()
 
     def build_df_dict_train(self):
         df_dict = {}
@@ -198,7 +213,8 @@ class BasicClassifier:
         # print("Total doc is ", self.result[class_selected]["DOC_OF_CLASS"])
         for feature_word in self.vocab_feature:
             total_word_class_tf += self.result[class_selected][feature_word]  # sum of Tct'
-            total_word_class_tfidf += self.tfidf_result[class_selected][feature_word]
+            if t_type == "tfidf":
+                total_word_class_tfidf += self.tfidf_result[class_selected][feature_word]
         if t_type == "bernoulli":
             # i = 0
             # print(self.test_data[index])
@@ -236,6 +252,9 @@ class BasicClassifier:
                     output += curr_word_prob * self.tfidf_dict_test[index][word]
                 elif t_type == "0-1":
                     if self.tf_dict_test[index][word] > 0:
+                        word_occurrence_in_class = self.result[class_selected][word] + alpha  # Tct + 1
+                        curr_word_prob = np.log(word_occurrence_in_class) - np.log(total_word_class_tf + len(
+                            self.vocab_feature) * alpha)
                         output += curr_word_prob
 
         return output, count

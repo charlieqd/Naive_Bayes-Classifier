@@ -34,17 +34,18 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
                                                        vocab_list, class_c, data.test_data.data, data.test_data.target,
                                                        "basic")
     basic_classifier.fit()
-
+    # predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, t_type, alpha)
     if t_type == "tf":
         predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "tf", alpha)
     elif t_type == "tfidf":
+        basic_classifier.tfidf_fit()
         predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "tfidf", alpha)
     elif t_type == "0-1":
         predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "0-1", alpha)
     elif t_type == "bernoulli":
+        basic_classifier.bernoulli_fit()
         predict_result = basic_classifier.predict_with_threshold(basic_classifier.test_data, threshold, "bernoulli",
                                                                  alpha)
-
     predict_result = basic_classifier.pred_result
     print("Truth is ")
     print(basic_classifier.y_test)
@@ -73,7 +74,7 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
 def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max, k, alpha=1, recall_ref=None, precision_ref=None):
     data = pickle.load(open(data_name, "rb"))
     print("test is ", len(data.vocab_feature))
-    vocab_list = data.vocab_feature[0:500]  # data.vocab_feature
+    vocab_list = data.vocab_feature[0:50]  # data.vocab_feature
     print(vocab_list)
     # kn_classifier = K_N_Voting.KnClassifier(data.train_data.data, data.train_data.target,
     #                                         data.vocab_feature, class_c, data.test_data.data,
@@ -85,7 +86,7 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
     if c_type == "multi":
         kn_classifier.kn_voting(kn_classifier.test_data, "multi", alpha)
     elif c_type == "bernoulli":
-        kn_classifier.build_df_dict_train()
+        kn_classifier.bernoulli_fit()
         kn_classifier.kn_voting(kn_classifier.test_data, "bernoulli", alpha)
     elif c_type == "test":
         kn_classifier.kn_voting(kn_classifier.test_data, "test", alpha)
@@ -120,16 +121,15 @@ if __name__ == '__main__':
     threshold = 0.5
     alpha = 1
     feature_list = [5, 50, 100]
-    data = pickle.load(open(file_name, "rb"))
-    Plot.plot_with_diff_features(data, np.arange(0.01, 1.02, 0.02), "bernoulli", feature_list, class_c)
+    # data = pickle.load(open(file_name, "rb"))
+    # Plot.plot_with_diff_features(data, np.arange(0.01, 1.02, 0.02), "bernoulli", feature_list, class_c)
     # recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
     # print(recall_r)
     # print(precision_r)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tfidf", alpha)
-    # run_base_classifier(file_name, class_c, threshold, 0, np.arange(0.01, 1.03, 0.02), "bernoulli", alpha)
-    # k_max = 250
-    # k = 2
-    # run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1.01, 0.01), "test", k_max, k)
-    # feature_number_list = [5, 10, 20, 50, 100, 200]
-    # Plot.plot_with_diff_features(data_1, np.arange(0.01, 1, 0.01), "bernoulli", feature_number_list)
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "0-1", alpha, 100)
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.03, 0.02), "bernoulli", alpha, 20)
+    k_max = 100
+    k = 2
+    run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1.03, 0.02), "bernoulli", k_max, k)

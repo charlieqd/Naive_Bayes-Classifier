@@ -29,7 +29,7 @@ class KnClassifier(BasicClassifier):
             word = word.lower()
             if word in self.result[class_selected].keys():
                 word_occurrence_in_class = self.result[class_selected][word] + alpha  # Tct + 1
-                word_occurrence = self.result[class_selected][word] + self.result[class_not_selected][word] + alpha*2
+                word_occurrence = self.result[class_selected][word] + self.result[class_not_selected][word] + alpha * 2
                 output = np.log(word_occurrence_in_class) - np.log(word_occurrence)
                 feature_prob.append(output)
             else:
@@ -52,7 +52,6 @@ class KnClassifier(BasicClassifier):
             feature_prob.append(prior)
 
         return feature_prob
-
 
     #
     # def log_prob_voting_kn_tfidf(self, test_data, class_selected, class_not_selected):
@@ -80,26 +79,22 @@ class KnClassifier(BasicClassifier):
 
     def log_prob_voting_kn_bernoulli(self, index, class_selected, class_not_selected, alpha=1):
         feature_prob = []
-        print("test data is ")
-        print(self.tf_dict[index])
         for word in self.vocab_feature:
-            total_doc = self.result[class_selected]["DOC_OF_CLASS"] + self.result[class_not_selected]["DOC_OF_CLASS"]
-            doc_with_word = self.df_dict_train[class_selected][word] + self.df_dict_train[class_not_selected][word] + alpha * 2
+            total_doc = self.result["TOTAL_DOC"]
+            # doc_with_word = self.df_dict_train[class_selected][word] + self.df_dict_train[class_not_selected][
+            #     word] + alpha * 2
+            doc_with_word = self.bernoulli_result[class_selected][word] + self.bernoulli_result[class_not_selected][
+                word] + alpha * 2
             doc_without_word = total_doc - doc_with_word
-            doc_with_word_in_class = self.df_dict_train[class_selected][word] + alpha
+            doc_with_word_in_class = self.bernoulli_result[class_selected][word] + alpha
             doc_without_word_in_class = self.result[class_selected]["DOC_OF_CLASS"] - doc_with_word_in_class
-            if word in self.tf_dict[index].keys():
-                print(word)
-                acond_prob = doc_with_word_in_class/doc_with_word
-                print(acond_prob)
+            if word in self.tf_dict_test[index].keys():
+                acond_prob = doc_with_word_in_class / doc_with_word
                 cond_prob = np.log(doc_with_word_in_class) - np.log(doc_with_word)
                 feature_prob.append(cond_prob)
             else:
-                acond_prob = doc_without_word_in_class/doc_without_word
-                print(word)
-                print(acond_prob)
+                acond_prob = doc_without_word_in_class / doc_without_word
                 bcond_prob = doc_with_word_in_class / doc_with_word
-                print(bcond_prob)
                 cond_prob = np.log(doc_without_word_in_class) - np.log(doc_without_word)
                 feature_prob.append(cond_prob)
 
@@ -156,9 +151,9 @@ class KnClassifier(BasicClassifier):
                 a = 0
                 if log_k > 0:
                     a = log_k
-                output = log_k - (a + np.log( np.exp(0 - a) + np.exp(log_k - a) ))
+                output = log_k - (a + np.log(np.exp(0 - a) + np.exp(log_k - a)))
                 feature_prob.append(output)
-                feature_n_prob.append(output-log_k)
+                feature_n_prob.append(output - log_k)
             else:
                 continue  # we don't care about the words not in the feature list
         if not feature_prob:
@@ -193,9 +188,9 @@ class KnClassifier(BasicClassifier):
                 # print("pclist is ")
                 # print(p_c_list)
                 # print(p_not_c_list)
-            elif v_type == "test":
+            elif v_type == "test":  # another way for multi
                 p_c_list, p_not_c_list = self.log_test(i)
-            elif v_type == "test1":
+            elif v_type == "test1":  # 0 - 1
                 p_c_list = self.log_prob_voting_kn_test1(i, "CLASS_C", "NOT_CLASS_C", alpha)
                 p_not_c_list = self.log_prob_voting_kn_test1(i, "NOT_CLASS_C", "CLASS_C", alpha)
                 if len(p_c_list) != len(p_not_c_list):
@@ -265,7 +260,7 @@ class KnClassifier(BasicClassifier):
 
         return recall_list, precision_list
 
-    def plot_kn(self, range_list):
+    def plot_kn(self, range_list, plot=1, precision_base=None, recall_base=None, k_range=[]):
         pred_prob = self.data_k_pred_prob_matrix
         k = self.k_max
         n = len(range_list)
@@ -289,18 +284,22 @@ class KnClassifier(BasicClassifier):
             for i in range(k):
                 recall_matrix[i][counter] = recall_list[i]
                 precision_matrix[i][counter] = precision_list[i]
-
             counter += 1
 
-        for i in range(self.k_max):
-            plt.plot(recall_matrix[i], precision_matrix[i], label=i+1)
-        # plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
-        plt.title('Precision-Recall curve of kn classifier')
-        # plt.legend(loc="right")
-        plt.legend(bbox_to_anchor=(1.5, 1))
-        plt.grid()
-        plt.show()
+        if plot == 1:
+            if not k_range:
+                for i in range(self.k_max):
+                    plt.plot(recall_matrix[i], precision_matrix[i], label=i + 1)
+            else:
+                for i in k_range:
+                    plt.plot(recall_matrix[i - 1], precision_matrix[i], label=i)
+            if precision_base is not None:
+                plt.plot(recall_base, precision_base, label="Base Model", linestyle='dashed')
+            plt.xlabel('Recall')
+            plt.ylabel('Precision')
+            plt.title('Precision-Recall curve of kn classifier')
+            plt.legend(bbox_to_anchor=(1.5, 1), title="K Value")
+            plt.grid()
+            plt.show()
 
         return recall_matrix, precision_matrix
