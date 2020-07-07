@@ -301,8 +301,8 @@ class KnClassifier(BasicClassifier):
             plt.xlabel('Recall')
             plt.ylabel('Precision')
             plt.title('Precision-Recall curve of kn classifier')
-            # plt.legend(loc="right")
-            plt.legend(bbox_to_anchor=(1.5, 1), title="K Value")
+            plt.legend(loc="right")
+            # plt.legend(bbox_to_anchor=(1.5, 1), title="K Value")
             plt.grid()
             plt.show()
 

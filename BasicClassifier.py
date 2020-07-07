@@ -286,19 +286,26 @@ class BasicClassifier:
             # print(p_not_c)
             best_pred = 0
             t = 1 - threshold
-            if p_c / p_not_c < np.log(threshold) / np.log(t):
-                best_pred = 1
+            # using
+            # if p_c / p_not_c < np.log(threshold) / np.log(t):
+            #     best_pred = 1
 
             # best_pred = 0
             # if p_c > p_not_c:
             #     best_pred = 1
-
 
             # if t == 0:
             #     best_pred = 0
             # else:
             #     if p_c - p_not_c > np.log(threshold) - np.log(t):
             #         best_pred = 1
+
+            if t == 0:
+                best_pred = 0
+            else:
+                if np.exp(p_c)/(np.exp(p_c) + np.exp(p_not_c)) > threshold:
+                    best_pred = 1
+
             target_pred.append(best_pred)
             pred_prob.append(p_c)
 

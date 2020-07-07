@@ -107,7 +107,7 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
     recall, precision, c, d = kn_classifier.estimation(prediction)
     print("precision and recall is ", precision, recall)
 
-    # pickle.dump(kn_classifier, file=open(c_name, "wb"))
+    pickle.dump(kn_classifier, file=open(c_name, "wb"))
     if plot == "plot_one":
         print(t_list)
         Plot.plot("kn", t_list, kn_classifier, k, 'K-N Voting Classifier with ' + c_type, 1, recall_ref, precision_ref)
@@ -116,34 +116,39 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
 
 
 if __name__ == '__main__':
-    class_c = 7
-    # class_c = 1
-    num_feature = 2000
+    # class_c = 7
+    class_c = 1
+    # num_feature = 2000
+    num_feature = 500
     file_name = "new_data_" + str(num_feature) + ".pickle"  # add stemming
     # data_1 = pickle.load(open(file_name, "rb"))
     # file_name = "data_" + str(num_feature) + " " + class_c + ".pickle"
     # load_data(class_c, num_feature, file_name)
+
     threshold = 0.5
     alpha = 1
-    feature_list = [5, 50, 100]
+    # feature_list = [5, 50, 100]
     data = pickle.load(open(file_name, "rb"))
+    # print(data.class_c)
     # Plot.plot_with_diff_features(data, np.arange(0.01, 1.02, 0.02), "bernoulli", feature_list, class_c)
     # recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
     # print(recall_r)
     # print(precision_r)
-    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "tf", alpha)
+    run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "tf", alpha, 200)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "tfidf", alpha, 1600)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "0-1", alpha, 1600)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "bernoulli", alpha, 20)
+
     # k_range = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
-    k_range = []
-    k_max = 30
-    k = 5
-    num_f = 100
+    # k_range = [1,2,5,10,20,30,40,50,80,100,150]
+    # k_max = 180
+    # k = 80
+    # num_f = 200
     # run_kn_classifier(file_name, class_c, threshold, "plot_one", np.arange(0.01, 1.02, 0.02), "multi", k_max, k,
     #                   alpha, None, None, 1600, k_range)
-    filename_t = "bernoulli_classifier_800"
-    run_kn_classifier(file_name, class_c, threshold, "plot_all", np.arange(0.01, 1.02, 0.02), "bernoulli", k_max, k, alpha, None, None, num_f, k_range)
+    # filename_t = "bernoulli_classifier_800"
+    # filename_t = "bernoulli_classifier_200"
+    # run_kn_classifier(file_name, class_c, threshold, "no", np.arange(0.01, 1.02, 0.02), "bernoulli", k_max, k, alpha, None, None, num_f, k_range, filenamej_t)
     # cla = pickle.load(open(filename_t, "rb"))
     # prediction = cla.predict_kn(cla.test_data, threshold, k)
     # print("Truth is ")
@@ -154,6 +159,18 @@ if __name__ == '__main__':
     # recall, precision, c, d = cla.estimation(prediction)
     # print("precision and recall is ", precision, recall)
     # print(cla.data_k_pred_prob_matrix)
+    # recall_b=[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.8484848484848485,
+    #          0.8484848484848485, 0.8409090909090909, 0.8358585858585859, 0.8181818181818182, 0.8055555555555556,
+    #          0.7474747474747475, 0.6868686868686869, 0.6212121212121212, 0.5303030303030303, 0.4065656565656566,
+    #          0.2474747474747475, 0.09090909090909091, 0.012626262626262626, 0.0025252525252525255]
+    # precision_b=[0.0525756771109931, 0.0525756771109931, 0.0525756771109931, 0.0525756771109931, 0.0525756771109931,
+    #          0.0525756771109931, 0.0525756771109931, 0.0525756771109931, 0.0525756771109931, 0.0525756771109931,
+    #          0.0525756771109931, 0.0525756771109931, 0.0525756771109931, 0.0525756771109931, 0.0525756771109931,
+    #          0.0525756771109931, 0.06244192529269652, 0.06342015855039637, 0.08157765801077903, 0.11114842175957018,
+    #          0.16, 0.2484423676012461, 0.37948717948717947, 0.5074626865671642, 0.6180904522613065, 0.711864406779661,
+    #          0.7931034482758621, 0.9074074074074074, 0.9473684210526315, 0.8333333333333334, 1.0]
+    #
+    # cla.plot_kn(np.arange(0.01, 1.02, 0.02), 1, recall_b, precision_b, k_range)
 
     # alpha_list = [0.000001]
     # Plot.plot_with_diff_alpha(data, np.arange(0.01, 1.02, 0.02), "tf", 10, alpha_list, class_c)
