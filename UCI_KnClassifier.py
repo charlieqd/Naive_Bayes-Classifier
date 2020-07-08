@@ -107,7 +107,7 @@ class KnClassifier(UCIBaseClassifier):
             prediction.append(pred)
         return prediction, pred_prob
 
-    def plot_kn(self, plot=1, r_base=None, p_base=None):
+    def plot_kn(self, plot=1, r_base=None, p_base=None, k_list=None):
         precision_matrix, recall_matrix = [], []
         for k in range(1, self.k_max + 1):
             prediction, prob_list = self.predict_kn(0.5, k)
@@ -117,11 +117,14 @@ class KnClassifier(UCIBaseClassifier):
             # print("t", threshold_list)
             precision_matrix.append(precision_list)
             recall_matrix.append(recall_list)
-        t_list = [13]
         if plot == 1:
-            for i in range(len(precision_matrix)):
-            # for i in t_list:
-                plt.plot(recall_matrix[i], precision_matrix[i], label=i+1)
+            if k_list is None:
+                for i in range(len(precision_matrix)):
+                    plt.plot(recall_matrix[i], precision_matrix[i], label=i+1)
+            else:
+                for i in k_list:
+                    plt.plot(recall_matrix[i-1], precision_matrix[i-1], label=i)
+
         if r_base is not None:
             plt.plot(r_base, p_base, label="Base Model", linestyle='dashed')
         plt.xlabel('Recall')
