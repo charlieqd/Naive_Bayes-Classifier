@@ -6,6 +6,7 @@ from nltk.stem import PorterStemmer
 from pylab import figure, axes, pie, title, show
 from nltk import word_tokenize
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_recall_curve
 
 
 class KnClassifier(UCIBaseClassifier):
@@ -17,11 +18,9 @@ class KnClassifier(UCIBaseClassifier):
 
     def kn_fit(self):
         self.fit()
-        print("Finish fit")
 
     def build_bu(self, p_c_list, p_not_c_list):
         bottom_up = np.zeros((self.n+1, self.n+1))
-        print("sss", bottom_up.shape)
 
         for i in range(self.n + 1):
             bottom_up[0][i] = 0
@@ -41,13 +40,13 @@ class KnClassifier(UCIBaseClassifier):
                 bottom_up[i][j] = a + np.log(np.exp(p1 - a) + np.exp(p2 - a))
 
         self.bottom_up_table = bottom_up
-        print(bottom_up)
-        print("table size is", bottom_up.shape)
+        # print(bottom_up)
+        # print("table size is", bottom_up.shape)
 
     def log_prob_kn(self, d_index, class_s, class_not_s, alpha=1):
         feature_prob_list = []
         prior = 0
-        if class_s == self.class_c:
+        if class_s == 1:
             prior += np.log(self.num_c) - np.log(self.num_c + self.num_nc)
         else:
             prior += np.log(self.num_nc) - np.log(self.num_c + self.num_nc)
@@ -79,23 +78,17 @@ class KnClassifier(UCIBaseClassifier):
             test_index = len(self. x_train) + ite
             p_c_list = self.log_prob_kn(test_index, 1, 0)
             p_nc_list = self.log_prob_kn(test_index, 0, 1)
-            print(p_c_list)
-            print(p_nc_list)
-            p_c_list.insert(0, -100000)
-            p_nc_list.insert(0, -100000)
-            print(p_c_list)
-            print(p_nc_list)
+            p_c_list.insert(0, -10000)
+            p_nc_list.insert(0, -10000)
             self.build_bu(p_c_list, p_nc_list)
 
             for k in range(1, self.k_max + 1):
                 prob_k = 0
                 k_n_list = self.bottom_up_table[self.n][k:]
-                print(k_n_list)
                 a = max(k_n_list)
                 for element in k_n_list:
                     prob_k += np.exp(element - a)
                 prob_k = np.log(prob_k) + a
-                print("index is ", k-1, counter)
                 pred_prob_matrix[k - 1][counter] = prob_k
             counter += 1
 
@@ -113,3 +106,30 @@ class KnClassifier(UCIBaseClassifier):
                 pred = 1
             prediction.append(pred)
         return prediction, pred_prob
+
+    def plot_kn(self, plot=1, r_base=None, p_base=None):
+        precision_matrix, recall_matrix = [], []
+        for k in range(1, self.k_max + 1):
+            prediction, prob_list = self.predict_kn(0.5, k)
+            precision_list, recall_list, threshold_list = precision_recall_curve(self.y_test, prob_list)
+            # print("p", precision_list)
+            # print("r", recall_list)
+            # print("t", threshold_list)
+            precision_matrix.append(precision_list)
+            recall_matrix.append(recall_list)
+        t_list = [13]
+        if plot == 1:
+            for i in range(len(precision_matrix)):
+            # for i in t_list:
+                plt.plot(recall_matrix[i], precision_matrix[i], label=i+1)
+        if r_base is not None:
+            plt.plot(r_base, p_base, label="Base Model", linestyle='dashed')
+        plt.xlabel('Recall')
+        plt.ylabel('Precision')
+        plt.title('K-N Voting Classifier Precision-Recall curve')
+        plt.grid()
+        # plt.legend(loc="right")
+        plt.legend(bbox_to_anchor=(1.5, 1))
+        show()
+
+        return precision_matrix, recall_matrix
