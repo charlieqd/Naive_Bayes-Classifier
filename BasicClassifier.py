@@ -5,6 +5,9 @@ from nltk import word_tokenize
 from nltk.stem import PorterStemmer
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import precision_recall_fscore_support
+from sklearn.metrics import precision_recall_curve
+import matplotlib.pyplot as plt
+from pylab import figure, axes, pie, title, show
 
 
 class BasicClassifier:
@@ -294,20 +297,24 @@ class BasicClassifier:
             # if p_c > p_not_c:
             #     best_pred = 1
 
-            # if t == 0:
-            #     best_pred = 0
-            # else:
-            #     if p_c - p_not_c > np.log(threshold) - np.log(t):
-            #         best_pred = 1
-
             if t == 0:
                 best_pred = 0
             else:
-                if np.exp(p_c)/(np.exp(p_c) + np.exp(p_not_c)) > threshold:
+                if p_c - p_not_c > np.log(threshold) - np.log(t):
                     best_pred = 1
 
+            a = np.exp(p_c - p_not_c)
+            p1 = a / (a + 1)
+            pred_prob.append(p1)
+
+            # if t == 0:
+            #     best_pred = 0
+            # else:
+            #     if np.exp(p_c)/(np.exp(p_c) + np.exp(p_not_c)) > threshold:
+            #         best_pred = 1
+
             target_pred.append(best_pred)
-            pred_prob.append(p_c)
+            # pred_prob.append(p_c)
 
         self.pred_result = target_pred
         self.pred_prob = pred_prob
@@ -351,3 +358,33 @@ class BasicClassifier:
         # print("Precision is ",precision)
         # print("Accuracy is ",accuracy)
         return recall, precision, prec, reca
+
+    def base_plot(self, plot=0):
+        print(" inplot, ", self.pred_prob)
+        print(len(self.pred_prob), len(self.y_test))
+        prob = []
+        for e in self.pred_prob:
+            if e < 0.00000001 or np.isnan(e) or not np.isfinite(e):
+                e = 0.00000001
+                prob.append(0.00000001)
+            else:
+                prob.append(e)
+            if not np.isfinite(e):
+                print(e)
+                print(" is infinite")
+            if np.isnan(e):
+                print(e)
+                print("is nan")
+        print(len(prob), len(self.y_test))
+        precision_list, recall_list, threshold_list = precision_recall_curve(self.y_test, prob)
+
+        # precision_list, recall_list, threshold_list = precision_recall_curve(self.y_test, self.pred_prob)
+        print(" in plot p,r is ", precision_list, recall_list, threshold_list)
+        if plot == 1:
+            plt.plot(recall_list, precision_list)
+            plt.xlabel('Recall')
+            plt.ylabel('Precision')
+            plt.title('Precision-Recall curve')
+            plt.grid()
+            show()
+        return precision_list, recall_list, threshold_list

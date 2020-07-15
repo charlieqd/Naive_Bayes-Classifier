@@ -74,8 +74,8 @@ class KnClassifier(UCIBaseClassifier):
     def predict_prob_kn(self):
         pred_prob_matrix = np.zeros((self.k_max, len(self.x_test)))
         counter = 0
-        for ite in range(len(self.x_test)):
-            test_index = len(self. x_train) + ite
+        for test_index in range(len(self.x_test)):
+            # test_index = len(self. x_train) + ite
             p_c_list = self.log_prob_kn(test_index, 1, 0)
             p_nc_list = self.log_prob_kn(test_index, 0, 1)
             p_c_list.insert(0, -10000)
@@ -131,7 +131,7 @@ class KnClassifier(UCIBaseClassifier):
         plt.ylabel('Precision')
         plt.title('K-N Voting Classifier Precision-Recall curve')
         plt.grid()
-        # plt.legend(loc="right")
+        plt.legend(loc="right")
         plt.legend(bbox_to_anchor=(1.5, 1))
         show()
 

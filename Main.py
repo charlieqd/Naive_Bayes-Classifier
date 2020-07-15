@@ -68,6 +68,8 @@ def run_base_classifier(data_name, class_c, threshold, plot, t_list, t_type, alp
         plt.legend(bbox_to_anchor=(1.5, 1))
         show()
 
+    basic_classifier.base_plot(1)
+
     return recall_list, precision_list
 
 
@@ -116,10 +118,10 @@ def run_kn_classifier(data_name, class_c, threshold, plot, t_list, c_type, k_max
 
 
 if __name__ == '__main__':
-    # class_c = 7
-    class_c = 1
-    # num_feature = 2000
-    num_feature = 500
+    class_c = 7
+    # class_c = 1
+    num_feature = 2000
+    # num_feature = 500
     file_name = "new_data_" + str(num_feature) + ".pickle"  # add stemming
     # data_1 = pickle.load(open(file_name, "rb"))
     # file_name = "data_" + str(num_feature) + " " + class_c + ".pickle"
@@ -134,10 +136,10 @@ if __name__ == '__main__':
     # recall_r, precision_r = run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1, 0.01), "bernoulli", alpha)
     # print(recall_r)
     # print(precision_r)
-    run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "tf", alpha, 200)
+    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "tf", alpha, 800)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "tfidf", alpha, 1600)
     # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "0-1", alpha, 1600)
-    # run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "bernoulli", alpha, 20)
+    run_base_classifier(file_name, class_c, threshold, 1, np.arange(0.01, 1.02, 0.02), "bernoulli", alpha, 20)
 
     # k_range = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20]
     # k_range = [1,2,5,10,20,30,40,50,80,100,150]

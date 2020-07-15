@@ -18,14 +18,21 @@ class UCIBaseClassifier:
         self.result = {}  # tf result
         self.y_test = []
         self.pred_result = []
-        self.n = self.x_train.shape[1]
+        self.n = self.x_train.shape[1] # number of features
         self.num_c = 0
         self.num_nc = 0
         self.pred_prob_list = []
 
+    # def truth_build(self):
+    #     for ite in range(len(self.test_target)):
+    #         i = len(self.x_train) + ite
+    #         if self.test_target[i] == self.class_c:
+    #             self.y_test.append(1)
+    #         else:
+    #             self.y_test.append(0)
+
     def truth_build(self):
-        for ite in range(len(self.test_target)):
-            i = len(self.x_train) + ite
+        for i in range(len(self.test_target)):
             if self.test_target[i] == self.class_c:
                 self.y_test.append(1)
             else:
@@ -61,8 +68,8 @@ class UCIBaseClassifier:
 
     def log_prob(self, class_s, alpha=1):
         prob_list = []
-        for ite in range(len(self.x_test)):
-            m = len(self. x_train) + ite
+        for m in range(len(self.x_test)):
+            # m = len(self. x_train) + ite
             prob, total_count = 0, 0
             # if class_s == self.class_c:
             if class_s == 1:
