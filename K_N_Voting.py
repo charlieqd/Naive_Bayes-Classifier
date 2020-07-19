@@ -39,7 +39,7 @@ class KnClassifier(BasicClassifier):
 
         return feature_prob
 
-    def log_prob_voting_kn_test1(self, index, class_selected, class_not_selected, alpha=1):
+    def log_prob_voting_kn_0_1(self, index, class_selected, class_not_selected, alpha=1):
         # 0 vs 1
         prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
         feature_prob = []
@@ -53,36 +53,10 @@ class KnClassifier(BasicClassifier):
 
         return feature_prob
 
-    #
-    # def log_prob_voting_kn_tfidf(self, test_data, class_selected, class_not_selected):
-    #     tokenizer = nltk.RegexpTokenizer(r"\w+")
-    #     prior = np.log(self.result[class_selected]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
-    #     feature_prob = []
-    #     word_list = []
-    #     for word in tokenizer.tokenize(test_data):
-    #         word = word.lower()
-    #         if word not in word_list:
-    #             word_list.append(word)
-    #         else:
-    #             continue
-    #         if word in self.result[class_selected].keys():
-    #             word_occurrence_in_class = self.tfidf_result[class_selected][word] + 1  # Tct + 1
-    #             word_occurrence = self.tfidf_result[class_selected][word] + 1 + self.tfidf_result[class_not_selected][word] + 1
-    #             output = np.log(word_occurrence_in_class) - np.log(word_occurrence)
-    #             feature_prob.append(output)
-    #         else:
-    #             continue  # we don't care about the words not in the feature list
-    #     if not feature_prob:
-    #         feature_prob.append(prior)
-    #
-    #     return feature_prob
-
     def log_prob_voting_kn_bernoulli(self, index, class_selected, class_not_selected, alpha=1):
         feature_prob = []
         for word in self.vocab_feature:
             total_doc = self.result["TOTAL_DOC"]
-            # doc_with_word = self.df_dict_train[class_selected][word] + self.df_dict_train[class_not_selected][
-            #     word] + alpha * 2
             doc_with_word = self.bernoulli_result[class_selected][word] + self.bernoulli_result[class_not_selected][
                 word] + alpha * 2
             doc_without_word = total_doc - doc_with_word
@@ -119,11 +93,10 @@ class KnClassifier(BasicClassifier):
                 p2 = p_not[i] + bottom_up[i - 1][j]
                 a = max(p1, p2)
                 bottom_up[i][j] = a + np.log(np.exp(p1 - a) + np.exp(p2 - a))
-                # bottom_up[i][j] = p[i] * bottom_up[i-1][j-1] + (1 - p[i])*bottom_up[i-1][j]
 
         self.bottom_up_table = bottom_up
 
-    def log_test(self, index, alpha=1):
+    def log_multi2(self, index, alpha=1):
         ps = PorterStemmer()
         tokenizer = nltk.RegexpTokenizer(r"\w+")
         prior = np.log(self.result["CLASS_C"]["DOC_OF_CLASS"]) - np.log(self.result["TOTAL_DOC"])
@@ -162,7 +135,7 @@ class KnClassifier(BasicClassifier):
             feature_n_prob.append(prior_n)
 
         if len(feature_prob) != len(feature_n_prob):
-            print("Isuueuhdsfjhdsfhbhg")
+            print("Length doesn't match")
 
         return feature_prob, feature_n_prob
 
@@ -173,29 +146,17 @@ class KnClassifier(BasicClassifier):
 
         for i in range(len(test_data)):
             p_c_list, p_not_c_list = [], []
-            data = test_data[i]
             if v_type == "multi":
                 p_c_list = self.log_prob_voting_kn_multi(i, "CLASS_C", "NOT_CLASS_C", alpha)
                 p_not_c_list = self.log_prob_voting_kn_multi(i, "NOT_CLASS_C", "CLASS_C", alpha)
-            # elif v_type == "tfidf":
-            #     p_c_list = self.log_prob_voting_kn_tfidf(data, "CLASS_C", "NOT_CLASS_C")
-            #     p_not_c_list = self.log_prob_voting_kn_tfidf(data, "NOT_CLASS_C", "CLASS_C")
-
-            # build the bottom up
             elif v_type == "bernoulli":
                 p_c_list = self.log_prob_voting_kn_bernoulli(i, "CLASS_C", "NOT_CLASS_C", alpha)
                 p_not_c_list = self.log_prob_voting_kn_bernoulli(i, "NOT_CLASS_C", "CLASS_C", alpha)
-                # print("pclist is ")
-                # print(p_c_list)
-                # print(p_not_c_list)
-            elif v_type == "test":  # another way for multi
-                p_c_list, p_not_c_list = self.log_test(i)
-            elif v_type == "test1":  # 0 - 1
-                p_c_list = self.log_prob_voting_kn_test1(i, "CLASS_C", "NOT_CLASS_C", alpha)
-                p_not_c_list = self.log_prob_voting_kn_test1(i, "NOT_CLASS_C", "CLASS_C", alpha)
-                if len(p_c_list) != len(p_not_c_list):
-                    print(len(p_c_list), len(p_not_c_list))
-                    print("probibfuigfs")
+            elif v_type == "multi_2":  # another way for multi
+                p_c_list, p_not_c_list = self.log_multi2(i)
+            elif v_type == "0-1":  # 0 - 1
+                p_c_list = self.log_prob_voting_kn_0_1(i, "CLASS_C", "NOT_CLASS_C", alpha)
+                p_not_c_list = self.log_prob_voting_kn_0_1(i, "NOT_CLASS_C", "CLASS_C", alpha)
 
             n = len(p_c_list)
             p_c_list.insert(0, -1)
@@ -216,15 +177,11 @@ class KnClassifier(BasicClassifier):
             counter += 1
 
         self.data_k_pred_prob_matrix = target_pred
-        print("3")
-        # print("Target matrix is ")
-        # print(target_pred)
         return target_pred
 
     def predict_kn(self, test_data, threshold, k):
         # need to run kn_voting first
         prediction = []
-        # print("shape is ", self.data_k_pred_prob_matrix.shape)
         for i in range(len(test_data)):
             pred = 0
             if self.data_k_pred_prob_matrix[k - 1][i] > np.log(threshold):
@@ -293,8 +250,6 @@ class KnClassifier(BasicClassifier):
                     plt.plot(recall_matrix[i], precision_matrix[i], label=i + 1)
             else:
                 for i in k_range:
-                    print("recall list is ", recall_matrix[i - 1])
-                    print("precision list is ", precision_matrix[i-1])
                     plt.plot(recall_matrix[i - 1], precision_matrix[i-1], label=i)
             if precision_base is not None:
                 plt.plot(recall_base, precision_base, label="Base Model", linestyle='dashed')
@@ -302,7 +257,7 @@ class KnClassifier(BasicClassifier):
             plt.ylabel('Precision')
             plt.title('Precision-Recall curve of kn classifier')
             plt.legend(loc="right")
-            # plt.legend(bbox_to_anchor=(1.5, 1), title="K Value")
+            plt.legend(bbox_to_anchor=(1.5, 1), title="K Value")
             plt.grid()
             plt.show()
 

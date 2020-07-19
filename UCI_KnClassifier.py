@@ -40,8 +40,6 @@ class KnClassifier(UCIBaseClassifier):
                 bottom_up[i][j] = a + np.log(np.exp(p1 - a) + np.exp(p2 - a))
 
         self.bottom_up_table = bottom_up
-        # print(bottom_up)
-        # print("table size is", bottom_up.shape)
 
     def log_prob_kn(self, d_index, class_s, class_not_s, alpha=1):
         feature_prob_list = []
@@ -57,17 +55,9 @@ class KnClassifier(UCIBaseClassifier):
                 prob = np.log(self.result[class_s][f][test_feature] + alpha) - np.log(
                     self.result[class_s][f][test_feature] + self.result[class_not_s][f][test_feature] + 2 * alpha)
                 feature_prob_list.append(prob)
-                # a = (self.result[class_s][f][test_feature] + alpha)/(self.result[class_s][f][test_feature] + alpha + self.result[class_not_s][f][test_feature] + alpha)
-                # print("a is ", a)
-                # print("in ", class_s, "prob is ", prob)
-                # print("data is ", self.result[class_s][f][test_feature], self.result[class_not_s][f][test_feature])
             else:
-                print("No corresponding feature: ", f, test_feature)
                 feature_prob_list.append(prior)
                 continue
-
-        # if not feature_prob_list:
-        #     feature_prob_list.append(prior)
 
         return feature_prob_list
 
@@ -75,7 +65,6 @@ class KnClassifier(UCIBaseClassifier):
         pred_prob_matrix = np.zeros((self.k_max, len(self.x_test)))
         counter = 0
         for test_index in range(len(self.x_test)):
-            # test_index = len(self. x_train) + ite
             p_c_list = self.log_prob_kn(test_index, 1, 0)
             p_nc_list = self.log_prob_kn(test_index, 0, 1)
             p_c_list.insert(0, -10000)
@@ -112,9 +101,6 @@ class KnClassifier(UCIBaseClassifier):
         for k in range(1, self.k_max + 1):
             prediction, prob_list = self.predict_kn(0.5, k)
             precision_list, recall_list, threshold_list = precision_recall_curve(self.y_test, prob_list)
-            # print("p", precision_list)
-            # print("r", recall_list)
-            # print("t", threshold_list)
             precision_matrix.append(precision_list)
             recall_matrix.append(recall_list)
         if plot == 1:
@@ -132,7 +118,7 @@ class KnClassifier(UCIBaseClassifier):
         plt.title('K-N Voting Classifier Precision-Recall curve')
         plt.grid()
         plt.legend(loc="right")
-        plt.legend(bbox_to_anchor=(1.5, 1))
+        # plt.legend(bbox_to_anchor=(1.5, 1))
         show()
 
         return precision_matrix, recall_matrix

@@ -9,8 +9,6 @@ from sklearn.datasets import fetch_20newsgroups
 
 class Newsgroups_data:
     def __init__(self, class_c):
-        self.train_cat = ['alt.atheism', 'comp.graphics']
-        # self.train_data = fetch_20newsgroups(subset='train',  categories=self.train_cat, remove=('headers', 'footers', 'quotes'))
         self.train_data = fetch_20newsgroups(subset='train', remove=('headers', 'footers', 'quotes'))
         self.test_data = fetch_20newsgroups(subset='test', remove=('headers', 'footers', 'quotes'))
         self.class_c = class_c

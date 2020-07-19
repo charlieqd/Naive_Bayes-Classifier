@@ -1,7 +1,6 @@
 import matplotlib
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 import numpy as np
-# %matplotlib inline
 import matplotlib.pyplot as plt
 from pylab import figure, axes, pie, title, show
 import BasicClassifier
@@ -12,19 +11,19 @@ def plot(e_type, range_list, classifier, k, info, p=0, recall_r=None, precision_
     for threshold in range_list:
         if e_type == "tf":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tf", alpha)
-            recall_c, precision_c, c, d = classifier.estimation(pred)
+            recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "tfidf":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "tfidf",  alpha)
-            recall_c, precision_c, c, d = classifier.estimation(pred)
+            recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "0-1":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "0-1",  alpha)
-            recall_c, precision_c, c, d = classifier.estimation(pred)
+            recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "bernoulli":
             pred = classifier.predict_with_threshold(classifier.test_data, threshold, "bernoulli",  alpha)
-            recall_c, precision_c, c, d = classifier.estimation(pred)
+            recall_c, precision_c = classifier.estimation(pred)
         elif e_type == "kn":
             pred = classifier.predict_kn(classifier.test_data, threshold, k)
-            recall_c, precision_c, c, d = classifier.estimation(pred)
+            recall_c, precision_c = classifier.estimation(pred)
 
         recall_list.append(recall_c)
         precision_list.append(precision_c)
@@ -35,17 +34,15 @@ def plot(e_type, range_list, classifier, k, info, p=0, recall_r=None, precision_
     print(threshold_list)
     if p == 1:
         plt.plot(recall_list, precision_list, label=k)
-        # plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
+        if recall_r is not None:
+            plt.plot(recall_r, precision_r, label="Base Model", linestyle='dashed')
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Precision-Recall curve' + info)
         plt.grid()
-        # plt.legend(loc="right")
-        plt.legend(bbox_to_anchor=(1.5, 1))
+        plt.legend(loc="right")
         show()
 
-        plot_name = classifier.name + ".png"
-        # plt.savefig(plot_name)
     return recall_list, precision_list
 
 
