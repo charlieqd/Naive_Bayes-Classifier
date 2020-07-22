@@ -1,3 +1,5 @@
+import bisect
+
 import pandas as pd
 import numpy as np
 from sklearn.metrics import precision_recall_curve
@@ -49,8 +51,11 @@ def run_classifier(classifier, x, y, p_base=None, r_base=None):
         y_real = np.concatenate(y_real)
         y_prob = np.concatenate(y_prob)
         precision, recall, threshold = precision_recall_curve(y_real, y_prob)
-        pr_plot(recall, precision)
-        return precision, recall
+        # eleven-point
+        recall_list, precision_list = eleven_point_ave_precision_plot(precision, recall)
+        pr_plot(recall_list, precision_list)
+        # pr_plot(recall, precision)
+        return precision_list, recall_list
 
     elif classifier == "kn":
         y_real_kn = np.concatenate(y_real_kn)
@@ -58,15 +63,17 @@ def run_classifier(classifier, x, y, p_base=None, r_base=None):
             y_prob_kn[k] = np.concatenate(y_prob_kn[k])
         for k in range(1, k_max + 1):
             precision, recall, threshold = precision_recall_curve(y_real_kn, y_prob_kn[k])
+            recall, precision = eleven_point_ave_precision_plot(precision, recall)
             plt.plot(recall, precision, label=k)
         if r_base is not None:
             plt.plot(r_base, p_base, label="Base Model", linestyle='dashed')
         plt.xlabel('Recall')
         plt.ylabel('Precision')
         plt.title('Precision-Recall curve')
-        plt.legend(loc="right")
+        plt.legend(loc="right", title="K Value")
         plt.grid()
         show()
+        return
 
 
 def pr_plot(recall, precision):
@@ -77,6 +84,30 @@ def pr_plot(recall, precision):
     plt.legend(loc="right")
     plt.grid()
     show()
+    return
+
+
+def eleven_point_ave_precision_plot(precision, recall):
+    recall_list = np.linspace(0, 1, 11)
+    print(recall_list)
+    precision_list = []
+    print(len(precision))
+    for r in recall_list:
+        print(r)
+        index = 0
+        for i in range(len(recall)):
+            if recall[i] > r:
+                index = i
+            else:
+                break
+        print(index)
+        if index == 0:
+            p_max = 0
+        else:
+            p_max = np.max(precision[:index])
+        print(p_max)
+        precision_list.append(p_max)
+    return recall_list, precision_list
 
 
 if __name__ == '__main__':
